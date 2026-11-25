@@ -475,11 +475,23 @@
         .slug-particle .art { filter: drop-shadow(0 5px 10px rgba(100, 255, 100, 0.5)); }
 
         /* ---------- self-drawing title + ring ---------- */
-        h1 { line-height: 0; }
-        .title-svg { display: block; width: min(88vw, 520px); height: auto; overflow: visible; filter: drop-shadow(0 2px 18px rgba(232, 194, 122, 0.28)); }
-        .title-svg text { font-family: var(--display); font-weight: 700; font-size: 78px; fill: url(#ink-gold); stroke: #f3d89a; stroke-width: 0.9; stroke-dasharray: 1600; stroke-dashoffset: 0; }
-        .title-svg.writing text { animation: ink-write 2.4s cubic-bezier(0.55, 0.1, 0.3, 1) both; }
-        @keyframes ink-write { 0% { stroke-dashoffset: 1600; fill-opacity: 0; } 65% { fill-opacity: 0; } 100% { stroke-dashoffset: 0; fill-opacity: 1; } }
+        h1.writing { animation: ink-reveal 1.7s cubic-bezier(0.55, 0.1, 0.3, 1) both; }
+        @keyframes ink-reveal { from { clip-path: inset(-25% -5% -25% 100%); } to { clip-path: inset(-25% -5% -25% -5%); } }
+        #fiendfyre-container, #dark-mark-container, #snake-container { display: none; }
+        #solid { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 17; }
+
+        /* ---------- Aguamenti: real water ---------- */
+        #water-container { z-index: 18; background: linear-gradient(180deg, rgba(90, 190, 245, 0.5) 0%, rgba(25, 110, 190, 0.7) 38%, rgba(8, 40, 100, 0.9) 100%);
+            -webkit-backdrop-filter: blur(3px) saturate(1.4) hue-rotate(-12deg); backdrop-filter: blur(3px) saturate(1.4) hue-rotate(-12deg); }
+        #water-container::before, #water-container::after { content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; }
+        #water-container::before { opacity: 0.3; background-image: radial-gradient(ellipse 38% 22% at 50% 50%, rgba(220, 245, 255, 0.9), transparent 60%); background-size: 180px 120px; animation: caustic-a 5s linear infinite; }
+        #water-container::after { opacity: 0.22; background-image: radial-gradient(ellipse 30% 26% at 50% 50%, rgba(200, 240, 255, 0.9), transparent 62%); background-size: 130px 95px; animation: caustic-b 7s linear infinite; }
+        @keyframes caustic-a { to { background-position: 180px 120px; } }
+        @keyframes caustic-b { to { background-position: -130px 95px; } }
+        .wave path { fill: rgba(90, 190, 245, 0.5); }
+        .wave.front path { stroke: rgba(235, 250, 255, 0.75); stroke-width: 2; }
+        @media (prefers-reduced-motion: reduce) { #water-container::before, #water-container::after { animation: none; } }
+        #fx { z-index: 19; }
         .ring .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
         .sigil.drawing .ring .draw { animation: ring-draw 1.6s cubic-bezier(0.6, 0, 0.3, 1) both; }
         .sigil.drawing .ring .draw:nth-of-type(2) { animation-delay: 0.25s; }
@@ -614,7 +626,7 @@
     </div>
 
     <main id="main-content" class="levitate-target">
-        <h1><span class="sr-only">عصاك السحرية جاهزة</span><svg class="title-svg" id="title-svg" viewBox="0 0 600 120" aria-hidden="true"><defs><linearGradient id="ink-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="0.55" stop-color="#e8c27a"/><stop offset="1" stop-color="#9c7a3c"/></linearGradient></defs><text x="300" y="86" text-anchor="middle" direction="rtl">عصاك السحرية جاهزة</text></svg></h1>
+        <h1 id="title">عصاك السحرية جاهزة</h1>
         <div id="status" role="status" aria-live="polite">اضغط على الزر وانطق التعويذة</div>
 
         <div class="sigil" id="sigil">
@@ -670,6 +682,7 @@
         <div class="book-body" id="book-body"></div>
     </aside>
 
+    <canvas id="solid" aria-hidden="true"></canvas>
     <canvas id="fx" aria-hidden="true"></canvas>
     <div id="kill-flash" aria-hidden="true"></div>
     <div id="game-over" role="alertdialog" aria-label="Game over">
@@ -741,12 +754,12 @@
 
         /* ---------------- canvas engines ---------------- */
         const fx = document.getElementById('fx'); const fxCtx = fx.getContext('2d');
-        const dust = document.getElementById('dust'); const dustCtx = dust.getContext('2d');
+        const dust = document.getElementById('dust'); const dustCtx = dust.getContext('2d'); const solid = document.getElementById('solid'); const solidCtx = solid.getContext('2d');
         let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
         function resize() {
             W = window.innerWidth; H = window.innerHeight;
-            for (const c of [fx, dust]) { c.width = W * DPR; c.height = H * DPR; }
-            fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); dustCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+            for (const c of [fx, dust, solid]) { c.width = W * DPR; c.height = H * DPR; }
+            fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); dustCtx.setTransform(DPR, 0, 0, DPR, 0, 0); solidCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
         }
         resize(); window.addEventListener('resize', resize);
 
@@ -801,6 +814,10 @@
                         fxCtx.drawImage(img, -s / 2, -s / 2, s, s);
                         fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); fxCtx.globalAlpha = 1;
                     }
+                } else if (p.kind === 'bubble') {
+                    fxCtx.globalAlpha = Math.min(1, k * 3) * 0.75; fxCtx.strokeStyle = 'rgba(230, 248, 255, 0.9)'; fxCtx.lineWidth = 1.2;
+                    fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.size, 0, 6.283); fxCtx.stroke();
+                    fxCtx.fillStyle = '#ffffff'; fxCtx.fillRect(p.x - p.size * 0.45, p.y - p.size * 0.5, 1.6, 1.6); fxCtx.globalAlpha = 1;
                 } else if (p.kind === 'flame') {
                     const r = p.size * (0.4 + k * 0.6);
                     const grd = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
@@ -1073,6 +1090,7 @@
             else if (spell === "fiendfyre") { statusText.innerText = "🐉 Fiendfyre!"; startFire(true); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if (statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
             else if (spell === "aguamenti") {
                 const water = document.getElementById('water-container'); water.style.opacity = "1"; body.classList.add('aguamenti-active');
+                waterSplash(isFireActive || body.classList.contains('fiendfyre-active'));
                 if (isFireActive || body.classList.contains('fiendfyre-active')) { stopFire(); body.classList.remove('fiendfyre-active'); clearTimeout(fireTimeout); statusText.innerText = "💧 Aguamenti! (تطفئ النيران)"; }
                 else statusText.innerText = "💧 Aguamenti! (تملأ المكان)";
                 setTimeout(() => { body.classList.remove('aguamenti-active'); statusText.innerText = "✨ انحسرت المياه!"; setTimeout(() => water.style.opacity = "0", 2000); }, 5000);
@@ -1095,13 +1113,13 @@
                 else if (!mainContent.classList.contains('text-small')) { mainContent.classList.add('text-small'); statusText.innerText = "🔎 Reducio! (تصغير)"; }
                 else statusText.innerText = "🔎 Reducio! (أصغر حجم)";
             }
-            else if (spell === "serpensortia") { statusText.innerText = "🐍 Serpensortia!"; const snake = document.getElementById('snake-container'); snake.classList.remove('vipera-evanesca-anim'); body.classList.add('serpensortia-active'); }
+            else if (spell === "serpensortia") { statusText.innerText = "🐍 Serpensortia!"; const snake = document.getElementById('snake-container'); snake.classList.remove('vipera-evanesca-anim'); body.classList.add('serpensortia-active'); startSnake(); }
             else if (spell === "vipera evanesca") {
-                if (body.classList.contains('serpensortia-active')) { statusText.innerText = "🔥 Vipera Evanesca!"; const snake = document.getElementById('snake-container'); snake.classList.add('vipera-evanesca-anim'); setTimeout(() => { body.classList.remove('serpensortia-active'); snake.classList.remove('vipera-evanesca-anim'); }, 1500); } else statusText.innerText = "✨ لا يوجد ثعبان";
+                if (body.classList.contains('serpensortia-active')) { statusText.innerText = "🔥 Vipera Evanesca!"; const snake = document.getElementById('snake-container'); snake.classList.add('vipera-evanesca-anim'); burnSnake(); setTimeout(() => { body.classList.remove('serpensortia-active'); snake.classList.remove('vipera-evanesca-anim'); }, 1500); } else statusText.innerText = "✨ لا يوجد ثعبان";
             }
             else if (spell === "avis") {
                 statusText.innerText = "🐦 Avis!";
-                for (let i = 0; i < 15; i++) { setTimeout(() => { const bird = document.createElement('div'); bird.innerHTML = art(Math.random() > 0.5 ? 'dove' : 'bird'); bird.className = "bird-particle"; bird.style.top = (Math.random() * 80 + 5) + "%"; bird.style.fontSize = (Math.random() * 2 + 2) + "rem"; bird.style.animationDuration = (Math.random() * 2 + 3) + "s"; document.body.appendChild(bird); setTimeout(() => bird.remove(), 5000); }, i * 200); }
+                startFlock();
             }
             else if (spell === "descendo") { statusText.innerText = "⬇️ Descendo!"; mainContent.classList.add('descendo-active'); }
             else if (spell === "diffindo") { statusText.innerText = "✂️ Diffindo!"; mainContent.classList.add('diffindo-active'); const slash = document.createElement('div'); slash.className = "diffindo-slash"; document.body.appendChild(slash); setTimeout(() => slash.remove(), 500); }
@@ -1135,7 +1153,7 @@
             }
             else if (spell === "homenum revelio") {
                 statusText.innerText = "👣 Homenum Revelio! (كشف التواجد)";
-                for (let i = 0; i < 6; i++) { setTimeout(() => { let step = document.createElement('div'); step.innerHTML = art('footprints'); Sound.play('step' + (i % 5), { gain: 0.9 }); step.className = 'footstep'; step.style.left = (12 + i * 13) + 'vw'; step.style.top = (52 + (i % 2 ? -7 : 7)) + 'vh'; step.style.rotate = '90deg'; document.body.appendChild(step); setTimeout(() => step.remove(), 3000); }, i * 800); }
+                startFootprints();
             }
             else if (spell === "sonorus") { statusText.innerText = "🔊 Sonorus! (تشغيل الموسيقى)"; let bgMusic = document.getElementById('hp-music'); bgMusic.play().catch(e => { statusText.innerText = "عذراً! الرجاء إضافة ملف hp-theme.mp3 بجانب الكود"; }); }
             else if (spell === "quietus") { statusText.innerText = "🔇 Quietus! (إيقاف الموسيقى)"; document.getElementById('hp-music').pause(); }
@@ -1145,7 +1163,7 @@
                     spellHistory.forEach((s, i) => { setTimeout(() => { let ghost = document.createElement('div'); ghost.className = 'ghost-spell'; ghost.innerText = `✨ ${s}`; document.body.appendChild(ghost); setTimeout(() => ghost.remove(), 4000); }, i * 1200); });
                 }
             }
-            else if (spell === "morsmordre") { statusText.innerText = "💀 Morsmordre!"; body.classList.add('morsmordre-active'); }
+            else if (spell === "morsmordre") { statusText.innerText = "💀 Morsmordre!"; body.classList.add('morsmordre-active'); startDarkMark(); }
             else if (spell === "protego") {
                 statusText.innerText = "🛡️ Protego! (درع الحماية مفعل)"; isProtegoActive = true;
                 const dome = document.getElementById('protego-dome'); const o = originPoint(); dome.style.left = o.x + 'px'; dome.style.top = o.y + 'px';
@@ -1158,7 +1176,7 @@
                 setTimeout(() => {
                     if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
                     document.getElementById('hp-music').pause();
-                    stopFire(); Sound.stopAll(); particles.length = 0; beams.length = 0; patronus.on = false; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
+                    stopFire(); Sound.stopAll(); particles.length = 0; beams.length = 0; patronus.on = false; flock.length = 0; steps.length = 0; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
                     document.getElementById('glass-crack-container').style.display = 'none';
                     document.getElementById('snake-container').classList.remove('vipera-evanesca-anim');
                     document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = '';
@@ -1372,7 +1390,7 @@
             const o = originPoint();
             switch (spell) {
                 case 'incendio': case 'fiendfyre': case 'aguamenti': case 'serpensortia': return { x: W / 2 + (Math.random() - 0.5) * W * 0.3, y: H * 0.93 };
-                case 'morsmordre': return { x: W / 2, y: H * 0.14 };
+                case 'morsmordre': return W > 700 ? { x: W * 0.8, y: H * 0.3 } : { x: W / 2, y: H * 0.09 };
                 case 'avis': return { x: W * 0.96, y: H * 0.3 };
                 case 'bombarda': return { x: W / 2, y: H / 2 };
                 case 'descendo': return { x: o.x, y: H * 0.96 };
@@ -1460,10 +1478,198 @@
             if (P.t > gallopStart + gallopLen + 55) P.on = false;
         }
 
-        (function fitTitle() {
-            const svg = document.getElementById('title-svg'); const fit = () => { try { const b = svg.querySelector('text').getBBox(); if (b.width) svg.setAttribute('viewBox', `${(b.x - 10).toFixed(0)} ${(b.y - 8).toFixed(0)} ${(b.width + 20).toFixed(0)} ${(b.height + 16).toFixed(0)}`); } catch (e) {} };
-            if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit); else fit();
-        })();
+        /* ---------------- Fiendfyre: beasts made of fire ---------------- */
+        const beastPts = {};
+        [['snake', 'snake.webp'], ['dragon', 'dragon.png']].forEach(([n, file]) => {
+            const im = new Image();
+            im.onload = () => {
+                const S = 110, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+                x.drawImage(im, 0, 0, S, S); const d = x.getImageData(0, 0, S, S).data; const pts = [];
+                for (let y = 0; y < S; y += 3) for (let xx = 0; xx < S; xx += 3) if (d[(y * S + xx) * 4 + 3] > 140) pts.push([(xx + Math.random() * 3) / S - 0.5, (y + Math.random() * 3) / S - 0.5]);
+                beastPts[n] = pts;
+            };
+            im.src = 'assets/noto/' + file;
+        });
+        const fiend = { t: 0, parts: null };
+        function drawFiend(dt) {
+            if (!body.classList.contains('fiendfyre-active') || !beastPts.snake || !beastPts.dragon) { fiend.parts = null; return; }
+            if (!fiend.parts) {
+                fiend.t = 0; fiend.parts = [];
+                for (const [n, side, flip] of [['snake', 0.7, 1], ['dragon', 0.3, -1]])
+                    for (const [px, py] of beastPts[n]) fiend.parts.push({ n, flip, px, py, x: W * side, y: H + 80, vx: 0, vy: 0, ph: Math.random() * 6.28 });
+            }
+            fiend.t += dt; const t = fiend.t, size = Math.min(W, H) * 0.58, rise = Math.min(1, t / 70);
+            const cs = [W * 0.7 + Math.sin(t * 0.025) * W * 0.05, H * (1.15 - 0.46 * rise) + Math.sin(t * 0.06) * 14];
+            const cd = [W * 0.3 + Math.sin(t * 0.02 + 1) * W * 0.04, H * (1.15 - 0.5 * rise) + Math.sin(t * 0.05 + 2) * 16];
+            fxCtx.globalCompositeOperation = 'lighter';
+            for (const p of fiend.parts) {
+                const c = p.n === 'snake' ? cs : cd;
+                const tx = c[0] + p.px * size * p.flip + Math.sin(t * 0.08 + p.py * 6) * 6, ty = c[1] + p.py * size;
+                p.vx += (tx - p.x) * 0.05 * dt; p.vy += (ty - p.y) * 0.05 * dt; p.vx *= 0.82; p.vy *= 0.82; p.x += p.vx * dt; p.y += p.vy * dt;
+                const f = 0.6 + Math.sin(t * 0.3 + p.ph) * 0.4;
+                fxCtx.globalAlpha = 0.85 * f; fxCtx.fillStyle = f > 0.75 ? '#ffe08a' : '#ff6a1a'; fxCtx.fillRect(p.x - 1.6, p.y - 1.6, 3.2, 3.2);
+            }
+            fxCtx.globalAlpha = 1;
+            const n = reduceMotion ? 2 : 11;
+            for (let k = 0; k < n; k++) {
+                const p = fiend.parts[(Math.random() * fiend.parts.length) | 0];
+                puff(pick(['flame_01', 'flame_03', 'flame_04']), pick(['#ff4a10', '#ff7a1a', '#ffb040']), p.x, p.y, { vy: -1.4, vx: (Math.random() - 0.5) * 0.6, size: 34 + Math.random() * 32, shrink: true, max: 26, alpha: 0.75 });
+            }
+        }
+
+        /* ---------------- shape sampling (images used only as stencils) ---------------- */
+        const shapes = {};
+        function sampleShape(name, src, step = 3) {
+            const im = new Image();
+            im.onload = () => {
+                const S = 110, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+                x.drawImage(im, 0, 0, S, S); const d = x.getImageData(0, 0, S, S).data; const pts = [];
+                for (let y = 0; y < S; y += step) for (let xx = 0; xx < S; xx += step) if (d[(y * S + xx) * 4 + 3] > 140) pts.push([(xx + Math.random() * step) / S - 0.5, (y + Math.random() * step) / S - 0.5]);
+                shapes[name] = pts;
+            };
+            im.src = src;
+        }
+        sampleShape('skull', 'assets/noto/skull.webp'); sampleShape('snakeShape', 'assets/noto/snake.webp'); sampleShape('foot', 'assets/noto/footprints.webp', 2);
+
+        /* ---------------- Dark Mark of green smoke ---------------- */
+        const dm = { parts: null, t: 0 };
+        function startDarkMark() { dm.parts = null; dm.t = 0; }
+        function drawDarkMark(dt) {
+            if (!body.classList.contains('morsmordre-active') || !shapes.skull || !shapes.snakeShape) { dm.parts = null; return; }
+            const wide = W > 700, size = Math.min(W, H) * (wide ? 0.34 : 0.22), cx = wide ? W * 0.8 : W / 2, cy = wide ? H * 0.3 : H * 0.09;
+            if (!dm.parts) {
+                dm.parts = [];
+                for (const [px, py] of shapes.skull) dm.parts.push({ tx: px * size, ty: py * size, x: cx, y: cy, vx: 0, vy: 0 });
+                for (const [px, py] of shapes.snakeShape) dm.parts.push({ tx: px * size * 0.7, ty: size * 0.62 - py * size * 0.7, x: cx, y: cy, vx: 0, vy: 0 });
+            }
+            dm.t += dt; const drift = Math.sin(dm.t * 0.02) * 6;
+            for (const p of dm.parts) {
+                const tx = cx + p.tx + Math.sin(dm.t * 0.03 + p.ty * 0.05) * 3, ty = cy + p.ty + drift;
+                p.vx += (tx - p.x) * 0.03 * dt; p.vy += (ty - p.y) * 0.03 * dt; p.vx *= 0.86; p.vy *= 0.86; p.x += p.vx * dt; p.y += p.vy * dt;
+            }
+            fxCtx.globalCompositeOperation = 'lighter'; fxCtx.fillStyle = '#5cff95';
+            for (const p of dm.parts) { fxCtx.globalAlpha = 0.45; fxCtx.fillRect(p.x - 1.3, p.y - 1.3, 2.6, 2.6); }
+            fxCtx.globalAlpha = 1;
+            const n = reduceMotion ? 1 : 7;
+            for (let k = 0; k < n; k++) {
+                const p = dm.parts[(Math.random() * dm.parts.length) | 0];
+                puff(pick(['smoke_01', 'smoke_02', 'smoke_04', 'smoke_07']), pick(['#2fd96a', '#1fa850', '#7dffb0']), p.x, p.y, { vy: -0.15, vx: (Math.random() - 0.5) * 0.3, size: 24 + Math.random() * 26, grow: 0.8, max: 70, alpha: 0.4 });
+            }
+        }
+
+        /* ---------------- Serpensortia: a living snake ---------------- */
+        const snk = { t: 0, burn: 0, tongue: 0 };
+        function startSnake() { snk.t = 0; snk.burn = 0; }
+        function burnSnake() { snk.burn = 0.001; }
+        function snakePoints() {
+            const N = 48, L = Math.min(W, H) * 0.95, rise = Math.min(1, snk.t / 60), baseY = H * (1.12 - 0.34 * rise), pts = [];
+            for (let i = 0; i < N; i++) {
+                const s = i / (N - 1);
+                pts.push([W / 2 + Math.sin(s * 3.2 * Math.PI - snk.t * 0.06) * L * 0.13 * (1 - s * 0.55), baseY + (1 - s) * L * 0.36 - s * L * 0.08, s]);
+            }
+            return pts;
+        }
+        function drawSnake(dt) {
+            if (!body.classList.contains('serpensortia-active')) return;
+            snk.t += dt; const pts = snakePoints(), N = pts.length, unit = Math.min(W, H) / 46;
+            const fade = snk.burn ? Math.max(0, 1 - snk.burn) : 1;
+            if (snk.burn) {
+                snk.burn += dt / 80;
+                for (let k = 0; k < 6; k++) { const [x, y] = pts[(Math.random() * N) | 0]; puff(pick(['flame_01', 'flame_03', 'fire_01']), pick(['#ff7a1a', '#ff4a10', '#ffc04a']), x, y, { vy: -1.6, size: 40 + Math.random() * 40, shrink: true, max: 30, alpha: 0.8 }); }
+            }
+            const ctx = solidCtx; ctx.save(); ctx.globalAlpha = fade; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            const rad = (s) => unit * (0.6 + 1.3 * Math.sin(Math.PI * Math.min(1, s * 1.15)));
+            for (const pass of [0, 1, 2]) {
+                for (let i = 1; i < N; i++) {
+                    const [x0, y0] = pts[i - 1], [x1, y1, s] = pts[i], r = rad(s);
+                    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+                    if (pass === 0) { ctx.strokeStyle = '#06200f'; ctx.lineWidth = r * 2 + 3; }
+                    else if (pass === 1) { ctx.strokeStyle = snk.burn ? `rgb(${60 + snk.burn * 120 | 0}, ${120 - snk.burn * 80 | 0}, 30)` : (i % 4 < 2 ? '#2fae5a' : '#24904a'); ctx.lineWidth = r * 2; }
+                    else { ctx.strokeStyle = 'rgba(200, 255, 180, 0.35)'; ctx.lineWidth = Math.max(1, r * 0.5); ctx.beginPath(); ctx.moveTo(x0 - r * 0.3, y0 - r * 0.3); ctx.lineTo(x1 - r * 0.3, y1 - r * 0.3); }
+                    ctx.stroke();
+                }
+            }
+            const [hx, hy] = pts[N - 1], [px, py] = pts[N - 3], ang = Math.atan2(hy - py, hx - px), hr = unit * 1.6;
+            ctx.translate(hx, hy); ctx.rotate(ang);
+            ctx.fillStyle = '#06200f'; ctx.beginPath(); ctx.ellipse(hr * 0.5, 0, hr * 1.7, hr * 1.15, 0, 0, 6.283); ctx.fill();
+            ctx.fillStyle = '#2fae5a'; ctx.beginPath(); ctx.ellipse(hr * 0.5, 0, hr * 1.55, hr * 1.0, 0, 0, 6.283); ctx.fill();
+            for (const sy of [-1, 1]) { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(hr * 1.1, sy * hr * 0.5, hr * 0.28, 0, 6.283); ctx.fill(); ctx.fillStyle = '#111'; ctx.fillRect(hr * 1.07, sy * hr * 0.5 - hr * 0.22, hr * 0.07, hr * 0.44); }
+            snk.tongue = (snk.tongue + dt) % 90;
+            if (snk.tongue < 18) { const tl = hr * (1 + Math.sin(snk.tongue / 18 * Math.PI) * 1.4); ctx.strokeStyle = '#e0283c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hr * 2, 0); ctx.lineTo(hr * 2 + tl, 0); ctx.lineTo(hr * 2 + tl + 6, -5); ctx.moveTo(hr * 2 + tl, 0); ctx.lineTo(hr * 2 + tl + 6, 5); ctx.stroke(); }
+            ctx.restore();
+        }
+
+        /* ---------------- Avis: a flock of birds ---------------- */
+        const flock = [];
+        function startFlock() {
+            const n = reduceMotion ? 6 : 22;
+            for (let i = 0; i < n; i++) flock.push({ x: W * 0.96 + Math.random() * 40, y: H * 0.3 + (Math.random() - 0.5) * 60, vx: -2 - Math.random() * 2, vy: (Math.random() - 0.5) * 2, ph: Math.random() * 6.28, s: 9 + Math.random() * 7, life: 0 });
+        }
+        function drawFlock(dt) {
+            if (!flock.length) return;
+            let ax = 0, ay = 0, avx = 0, avy = 0;
+            for (const b of flock) { ax += b.x; ay += b.y; avx += b.vx; avy += b.vy; }
+            ax /= flock.length; ay /= flock.length; avx /= flock.length; avy /= flock.length;
+            const ctx = solidCtx; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            for (let i = flock.length - 1; i >= 0; i--) {
+                const b = flock[i]; b.life += dt;
+                b.vx += ((ax - b.x) * 0.0006 + (avx - b.vx) * 0.04 - 0.03) * dt; b.vy += ((ay - b.y) * 0.0006 + (avy - b.vy) * 0.04 + Math.sin(b.life * 0.03 + b.ph) * 0.03) * dt;
+                for (const o of flock) { if (o === b) continue; const dx = b.x - o.x, dy = b.y - o.y, d2 = dx * dx + dy * dy; if (d2 < 900) { b.vx += dx / (d2 + 1) * 0.8; b.vy += dy / (d2 + 1) * 0.8; } }
+                const sp = Math.hypot(b.vx, b.vy), mx = 5.5; if (sp > mx) { b.vx *= mx / sp; b.vy *= mx / sp; }
+                b.x += b.vx * dt; b.y += b.vy * dt; b.ph += 0.35 * dt;
+                if (b.x < -60 || b.life > 600) { flock.splice(i, 1); continue; }
+                const f = Math.sin(b.ph) * 0.9, s = b.s, ang = Math.atan2(b.vy, b.vx);
+                ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(ang + Math.PI);
+                ctx.strokeStyle = '#e9eefc'; ctx.lineWidth = 2.2;
+                ctx.beginPath(); ctx.moveTo(-s * 0.3, -s); ctx.quadraticCurveTo(-s * 0.1, -s * 0.4 * f - s * 0.2, 0, 0); ctx.quadraticCurveTo(-s * 0.1, s * 0.4 * f + s * 0.2, -s * 0.3, s); ctx.stroke();
+                ctx.fillStyle = '#e9eefc'; ctx.beginPath(); ctx.ellipse(s * 0.1, 0, s * 0.45, s * 0.16, 0, 0, 6.283); ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        /* ---------------- Homenum Revelio: ink footprints ---------------- */
+        const steps = [];
+        function startFootprints() {
+            const n = 7, y0 = H * 0.62, x0 = W * 0.12, dx = (W * 0.76) / (n - 1);
+            for (let i = 0; i < n; i++) setTimeout(() => { steps.push({ x: x0 + dx * i, y: y0 + (i % 2 ? -18 : 18), t: 0, flip: i % 2 }); Sound.play('step' + (i % 5), { gain: 0.9 }); }, i * 650);
+        }
+        function drawFootprints(dt) {
+            if (!steps.length || !shapes.foot) return;
+            const size = Math.min(W, H) * 0.09, ctx = solidCtx;
+            for (let i = steps.length - 1; i >= 0; i--) {
+                const st = steps[i]; st.t += dt; if (st.t > 260) { steps.splice(i, 1); continue; }
+                const grow = Math.min(1, st.t / 40), alpha = st.t > 200 ? 1 - (st.t - 200) / 60 : 1;
+                ctx.save(); ctx.translate(st.x, st.y); ctx.rotate(Math.PI / 2); if (st.flip) ctx.scale(-1, 1);
+                for (const [px, py] of shapes.foot) {
+                    const r = Math.hypot(px, py) * 2; if (r > grow * 1.4) continue;
+                    ctx.globalAlpha = alpha * 0.85; ctx.fillStyle = '#e8c27a'; ctx.fillRect(px * size - 1, py * size - 1, 2.2, 2.2);
+                }
+                ctx.restore();
+                if (grow < 1 && !reduceMotion && Math.random() < 0.5) emit({ x: st.x + (Math.random() - 0.5) * size, y: st.y + (Math.random() - 0.5) * size, vx: 0, vy: -0.4, life: 0, max: 30, size: 1.2, kind: 'spark', color: '#ffe3a0', g: 0, drag: 0.98 });
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function waterSplash(douse) {
+            const cx = W / 2, cy = H * 0.93;
+            for (let i = 0; i < (reduceMotion ? 20 : 110); i++) {
+                const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, sp = 5 + Math.random() * 9;
+                emit({ x: cx + (Math.random() - 0.5) * 60, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 50 + Math.random() * 30, size: Math.random() * 2.6 + 1, kind: 'spark', color: palettes.water[(Math.random() * 3) | 0], g: 0.28, drag: 0.99, trail: true });
+            }
+            for (let i = 0; i < 6; i++) puff(pick(['smoke_02', 'smoke_04']), '#cfeeff', cx + (Math.random() - 0.5) * 200, cy, { vy: -2, vx: (Math.random() - 0.5) * 1.5, size: 140, grow: 1.2, max: 45, alpha: 0.35 });
+            if (douse) for (let i = 0; i < 16; i++) puff(pick(['smoke_01', 'smoke_02', 'smoke_07']), '#e8e4dc', Math.random() * W, H * (0.6 + Math.random() * 0.35), { vy: -1.2 - Math.random(), vx: (Math.random() - 0.5) * 0.6, size: 180 + Math.random() * 120, grow: 1.4, max: 120, alpha: 0.28 });
+        }
+
+        function writeTitle() {
+            const h = document.getElementById('title'); h.classList.add('writing');
+            requestAnimationFrame(() => {
+                const r = h.getBoundingClientRect();
+                for (let i = 0; i <= 26; i++) setTimeout(() => {
+                    const x = r.right - r.width * (i / 26), y = r.top + r.height * (0.5 + Math.sin(i * 1.3) * 0.18);
+                    for (let k = 0; k < 3; k++) emit({ x, y, vx: (Math.random() - 0.5) * 1.2, vy: -Math.random() * 1.2, life: 0, max: 28 + Math.random() * 18, size: Math.random() * 1.7 + 0.7, kind: 'spark', color: palettes.gold[(Math.random() * 3) | 0], g: 0.03, drag: 0.96 });
+                }, i * 62);
+            });
+        }
 
         function drawExtras(dt) {
             if (!reduceMotion) {
@@ -1477,13 +1683,19 @@
                 if (!reduceMotion && Math.random() < 0.5) emit({ x: lx, y: ly, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, life: 0, max: 24, size: Math.random() * 1.4 + 0.6, kind: 'spark', color: palettes.light[(Math.random() * 3) | 0], g: 0, drag: 0.95 });
             }
             if (!reduceMotion && body.classList.contains('morsmordre-active') && Math.random() < 0.3 * dt)
-                puff(pick(['smoke_01', 'smoke_02', 'smoke_04', 'smoke_07']), pick(['#2fd96a', '#1fa850', '#5cff95']), W / 2 + (Math.random() - 0.5) * 320, H * 0.2 + (Math.random() - 0.5) * 140,
+                puff(pick(['smoke_01', 'smoke_02', 'smoke_04', 'smoke_07']), pick(['#2fd96a', '#1fa850', '#5cff95']), (W > 700 ? W * 0.8 : W / 2) + (Math.random() - 0.5) * 320, (W > 700 ? H * 0.3 : H * 0.1) + (Math.random() - 0.5) * 140,
                     { vx: (Math.random() - 0.5) * 0.3, vy: -0.12, size: 140 + Math.random() * 120, grow: 0.7, max: 220, alpha: 0.2, vr: (Math.random() - 0.5) * 0.006 });
             if (!reduceMotion && patronus.on && patronus.parts.length && Math.random() < 0.5 * dt) {
                 const p = patronus.parts[(Math.random() * patronus.parts.length) | 0];
                 puff('smoke_07', '#bfe6ff', p.x, p.y, { vx: patronus.t > 55 ? 1.6 : 0, vy: -0.2, size: 70, grow: 1.1, max: 60, alpha: 0.14 });
             }
-            drawBeams(dt); drawPatronus(dt);
+            if (!reduceMotion && body.classList.contains('aguamenti-active') && Math.random() < 0.6 * dt) {
+                const top = H - document.getElementById('water-container').getBoundingClientRect().height; const sp = 1 + Math.random() * 1.8;
+                if (H - top > 40) emit({ x: Math.random() * W, y: H + 8, vx: 0, vy: -sp, life: 0, max: Math.max(10, (H - top) / sp), size: 1.5 + Math.random() * 4, kind: 'bubble', g: 0, drag: 1, wob: Math.random() * 6 });
+            }
+            solidCtx.clearRect(0, 0, W, H);
+            drawSnake(dt); drawFlock(dt); drawFootprints(dt); drawDarkMark(dt);
+            drawFiend(dt); drawBeams(dt); drawPatronus(dt);
             fxCtx.globalCompositeOperation = 'source-over';
         }
 
@@ -1515,7 +1727,15 @@
             const k = n + color; let c = tintCache.get(k); if (c) return c;
             const im = TEX[n]; if (!im) return null;
             c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d');
-            x.drawImage(im, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
+            x.drawImage(im, 0, 0);
+            const w = c.width, h = c.height, id = x.getImageData(0, 0, w, h), d = id.data;
+            for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
+                const i = (yy * w + xx) * 4 + 3, r = Math.hypot(xx - w / 2, yy - h / 2) / (w / 2);
+                const fall = r >= 1 ? 0 : r > 0.72 ? (1 - r) / 0.28 : 1;
+                d[i] = d[i] < 30 ? 0 : ((d[i] - 30) * 255 / 225) * fall;
+            }
+            x.putImageData(id, 0, 0);
+            x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, w, h);
             tintCache.set(k, c); return c;
         }
         const pick = (a) => a[(Math.random() * a.length) | 0];
@@ -1527,7 +1747,7 @@
 
         /* ---------------- entrance ---------------- */
         if (!reduceMotion) {
-            document.getElementById('title-svg').classList.add('writing'); sigil.classList.add('drawing');
+            writeTitle(); sigil.classList.add('drawing');
             animate(statusText, { opacity: [0, 1] }, { duration: 0.6, delay: 0.35 });
             animate(sigil, { opacity: [0, 1], scale: [0.7, 1], rotate: [-25, 0] }, { duration: 1.1, delay: 0.2, type: M ? 'spring' : undefined, bounce: 0.25 });
         }
