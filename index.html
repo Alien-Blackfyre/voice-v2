@@ -2,259 +2,718 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التعاويذ الصوتية السحرية - المشروع الأسطوري</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#141a33">
+    <title>التعاويذ الصوتية السحرية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Readex+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700&display=swap');
+        :root {
+            --ink: #141a33;
+            --ink-deep: #090c1c;
+            --ink-raised: #1d2547;
+            --gold: #e8c27a;
+            --brass: #9c7a3c;
+            --parchment: #efe3c8;
+            --parchment-dim: rgba(239, 227, 200, 0.62);
+            --crimson: #9e1b2d;
+            --spectral: #9fd8ff;
+            --line: rgba(232, 194, 122, 0.22);
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --display: 'Aref Ruqaa', 'Amiri', serif;
+            --ui: 'Readex Pro', 'Cairo', system-ui, sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { background: var(--ink-deep); overflow: hidden; overflow: clip; height: 100%; }
 
         body {
-            background-color: #0d1117; color: #d4af37; font-family: 'Amiri', serif;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0;
-            transition: background-color 1s ease, filter 2s ease, transform 2s ease, box-shadow 0.5s ease;
-            text-align: center; padding: 20px; box-sizing: border-box;
-            overflow: hidden; perspective: 1000px;
+            margin: 0; min-height: 100vh; min-height: 100dvh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+            background:
+                radial-gradient(ellipse 70% 55% at 50% 38%, #26305e 0%, rgba(38, 48, 94, 0) 70%),
+                radial-gradient(ellipse at 50% 120%, #1a1230 0%, rgba(26, 18, 48, 0) 60%),
+                linear-gradient(180deg, var(--ink) 0%, var(--ink-deep) 100%);
+            background-attachment: fixed;
+            color: var(--parchment); font-family: var(--ui); text-align: center;
+            overflow: hidden; overflow: clip; perspective: 1000px;
+            transition: background-color 1s ease, filter 1.6s ease, color 0.8s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* زر التبديل بين الصوت والكتابة */
-        #mode-toggle-btn {
-            position: fixed; top: 20px; right: 20px; z-index: 10000;
-            background: rgba(0, 0, 0, 0.7); color: #d4af37; border: 1px solid #d4af37;
-            padding: 10px 20px; border-radius: 20px; cursor: pointer;
-            font-family: 'Cairo', sans-serif; font-size: 1.1em; transition: opacity 1s ease, all 0.3s;
+        button, input { font: inherit; color: inherit; }
+        button { cursor: pointer; }
+        :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+        /* ---------- canvas layers ---------- */
+        #dust, #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        #dust { z-index: 0; opacity: 0.8; }
+        #fx { z-index: 30; mix-blend-mode: screen; }
+
+        /* ---------- top bar ---------- */
+        .topbar {
+            position: fixed; top: 0; inset-inline: 0; z-index: 10000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: max(14px, env(safe-area-inset-top)) 16px 0; pointer-events: none;
+            transition: opacity 1s ease;
         }
-        #mode-toggle-btn:hover { background: #d4af37; color: #0d1117; box-shadow: 0 0 15px #d4af37; }
+        .chip {
+            pointer-events: auto; display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 16px; border-radius: 999px; font-size: 0.95rem; font-weight: 500;
+            background: rgba(20, 26, 51, 0.6); border: 1px solid var(--line); color: var(--gold);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s var(--ease-out);
+        }
+        .chip:hover { background: rgba(232, 194, 122, 0.12); border-color: rgba(232, 194, 122, 0.5); }
+        .chip:active { transform: scale(0.96); }
+        .chip svg { width: 18px; height: 18px; flex: none; }
 
-        /* حاوية إدخال النص */
-        #text-input-container { display: none; margin-top: 10px; z-index: 20; position: relative; }
-        #spell-input { padding: 15px; font-size: 1.2em; font-family: 'Cairo', sans-serif; border: 2px solid #d4af37; background-color: #222; color: white; border-radius: 8px; width: 280px; text-align: center; margin-left: 10px; }
-        #spell-input:focus { outline: none; box-shadow: 0 0 15px #d4af37; }
-        #cast-btn { padding: 15px 25px; font-size: 1.2em; background-color: #ae0001; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Amiri', serif; font-weight: bold; }
-        #cast-btn:hover { background-color: #ff3333; box-shadow: 0 0 15px #ff3333; }
+        /* ---------- stage ---------- */
+        #main-content {
+            --scale: 1; --translateY: 0; --skewX: 0deg; --rotate: 0deg;
+            position: relative; z-index: 20; width: 100%; max-width: 560px;
+            display: flex; flex-direction: column; align-items: center;
+            transform: scale(var(--scale)) translateY(var(--translateY)) skewX(var(--skewX)) rotate(var(--rotate));
+            transition: transform 0.9s var(--ease-spring), opacity 1s ease;
+        }
+        #main-content.text-large { --scale: 1.3; }
+        #main-content.text-small { --scale: 0.65; }
+        #main-content.descendo-active { --translateY: 32vh; }
+        #main-content.diffindo-active { --skewX: -5deg; --rotate: 2deg; }
 
-        /* --- تأثيرات التعاويذ --- */
-        body.lumos-active { background-color: #ffffff !important; color: #000000; box-shadow: inset 0 0 50px #fff9c4; }
-        body.frozen { pointer-events: none !important; user-select: none; filter: grayscale(100%) contrast(150%) brightness(80%); }
-        body.incendio-active { background: radial-gradient(circle at bottom, #2b0500 0%, #0d1117 60%); }
-        
-        #fire-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 5; overflow: hidden; }
-        .flame-particle { position: absolute; bottom: -50px; border-radius: 50%; filter: blur(8px); mix-blend-mode: screen; animation: rise linear forwards; }
-        @keyframes rise { 0% { transform: translateY(0) scale(1) translateX(0); opacity: 1; } 100% { transform: translateY(-80vh) scale(0.4) translateX(var(--sway)); opacity: 0; } }
+        h1 {
+            font-family: var(--display); font-weight: 700; margin: 0;
+            font-size: clamp(2.4rem, 9vw, 3.8rem); line-height: 1.25;
+            background: linear-gradient(180deg, #fff1cf 0%, var(--gold) 55%, var(--brass) 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 2px 18px rgba(232, 194, 122, 0.28));
+        }
 
-        #fiendfyre-container { position: fixed; bottom: -100vh; width: 100%; display: flex; justify-content: center; align-items: flex-end; gap: 30px; pointer-events: none; z-index: 6; transition: bottom 2s ease-in-out, opacity 1s ease; opacity: 0; }
-        body.fiendfyre-active #fiendfyre-container { bottom: 5vh; opacity: 1; }
-        .fiendfyre-beast { font-size: 13rem; filter: grayscale(100%) sepia(100%) hue-rotate(-25deg) saturate(15) brightness(1.3) drop-shadow(0 -10px 20px #ff0000) drop-shadow(0 0 40px #ff4500); animation: fiendfyre-move 3s infinite alternate ease-in-out, fiendfyre-flicker 0.15s infinite alternate; }
-        .fiendfyre-beast.snake { animation-delay: 0s; font-size: 15rem; } .fiendfyre-beast.dragon { animation-delay: 0.5s; }
+        #status {
+            min-height: 1.7em; margin: 10px 0 26px; font-size: 1.05rem; font-weight: 400;
+            color: var(--parchment-dim); max-width: 34ch; line-height: 1.6; unicode-bidi: plaintext;
+        }
+
+        /* ---------- the wand sigil ---------- */
+        .sigil { position: relative; width: 236px; height: 236px; display: grid; place-items: center; }
+        .sigil .ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; direction: ltr; }
+        .ring-outer { animation: turn 90s linear infinite; }
+        .ring-inner { animation: turn 60s linear infinite reverse; }
+        .ring text { font-family: var(--display); font-size: 11.5px; letter-spacing: 2.8px; fill: rgba(232, 194, 122, 0.55); }
+        .ring-inner text { font-size: 9px; fill: rgba(232, 194, 122, 0.32); letter-spacing: 4px; }
+        @keyframes turn { to { transform: rotate(360deg); } }
+        .ring-outer, .ring-inner { transform-origin: 50% 50%; transform-box: fill-box; }
+        .sigil.listening .ring-outer { animation-duration: 9s; }
+        .sigil.listening .ring-inner { animation-duration: 6s; }
+        .sigil.listening .ring text { fill: rgba(255, 196, 170, 0.85); }
+
+        .ripple {
+            position: absolute; width: 120px; height: 120px; border-radius: 50%;
+            border: 1.5px solid rgba(232, 80, 90, 0.7); opacity: 0; pointer-events: none;
+        }
+        .sigil.listening .ripple { animation: ripple 2.1s var(--ease-out) infinite; }
+        .sigil.listening .ripple:nth-of-type(2) { animation-delay: 0.7s; }
+        .sigil.listening .ripple:nth-of-type(3) { animation-delay: 1.4s; }
+        @keyframes ripple { 0% { transform: scale(0.95); opacity: 0.85; } 100% { transform: scale(1.9); opacity: 0; } }
+
+        #mic-btn {
+            position: relative; width: 118px; height: 118px; border-radius: 50%;
+            display: grid; place-items: center; border: none; color: var(--ink);
+            background: radial-gradient(circle at 35% 30%, #fff3d6 0%, var(--gold) 34%, var(--brass) 78%, #5e4720 100%);
+            box-shadow: 0 0 0 1px rgba(255, 240, 200, 0.35) inset, 0 -8px 18px rgba(60, 40, 10, 0.45) inset,
+                        0 10px 30px rgba(0, 0, 0, 0.45), 0 0 46px rgba(232, 194, 122, 0.35);
+            transition: transform 0.25s var(--ease-spring), box-shadow 0.35s ease, background 0.4s ease, color 0.3s ease;
+        }
+        #mic-btn svg { width: 42px; height: 42px; }
+        #mic-btn:hover { transform: scale(1.05); box-shadow: 0 0 0 1px rgba(255, 240, 200, 0.45) inset, 0 -8px 18px rgba(60, 40, 10, 0.45) inset, 0 12px 34px rgba(0, 0, 0, 0.5), 0 0 70px rgba(232, 194, 122, 0.55); }
+        #mic-btn:active { transform: scale(0.95); }
+        #mic-btn.listening {
+            color: #fff1ea;
+            background: radial-gradient(circle at 35% 30%, #ff9b8f 0%, #d8344a 38%, var(--crimson) 75%, #4a0712 100%);
+            box-shadow: 0 0 0 1px rgba(255, 200, 190, 0.35) inset, 0 -8px 18px rgba(40, 0, 6, 0.5) inset, 0 0 60px rgba(216, 52, 74, 0.6);
+            animation: breathe 1.4s ease-in-out infinite;
+        }
+        @keyframes breathe { 50% { transform: scale(1.06); } }
+
+        /* ---------- typed casting ---------- */
+        #text-input-container { display: none; width: 100%; max-width: 420px; }
+        .cast-form {
+            display: flex; gap: 8px; padding: 6px; border-radius: 18px;
+            background: rgba(9, 12, 28, 0.55); border: 1px solid var(--line);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .cast-form:focus-within { border-color: rgba(232, 194, 122, 0.6); box-shadow: 0 0 0 4px rgba(232, 194, 122, 0.08), 0 0 40px rgba(232, 194, 122, 0.12); }
+        #spell-input {
+            flex: 1; min-width: 0; padding: 12px 14px; border: none; background: transparent;
+            color: var(--parchment); font-size: 1.15rem; text-align: center; outline: none;
+        }
+        #spell-input::placeholder { color: rgba(239, 227, 200, 0.38); }
+        #cast-btn {
+            flex: none; padding: 12px 20px; border-radius: 13px; border: none; font-weight: 600;
+            color: #fff1ea; background: linear-gradient(180deg, #c42a40 0%, var(--crimson) 100%);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 6px 18px rgba(158, 27, 45, 0.4);
+            transition: transform 0.2s var(--ease-out), box-shadow 0.25s ease;
+        }
+        #cast-btn:hover { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 6px 26px rgba(216, 52, 74, 0.6); }
+        #cast-btn:active { transform: scale(0.95); }
+
+        /* ---------- inscription ---------- */
+        #spell-result {
+            min-height: 1.4em; margin-top: 26px; direction: ltr;
+            font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 8vw, 2.9rem);
+            text-transform: capitalize; line-height: 1.2;
+            background: linear-gradient(180deg, #fff6dc 0%, var(--gold) 70%); -webkit-background-clip: text; background-clip: text; color: transparent;
+            filter: drop-shadow(0 0 22px rgba(232, 194, 122, 0.45));
+        }
+        #spell-result .heard {
+            display: block; font-family: var(--ui); font-weight: 300; font-size: 0.42em; letter-spacing: 0;
+            color: rgba(239, 227, 200, 0.45); -webkit-text-fill-color: rgba(239, 227, 200, 0.45);
+            text-decoration: line-through; text-transform: none; margin-bottom: 2px;
+        }
+
+        /* ---------- patronus ---------- */
+        #patronus-container {
+            display: none; margin-top: 26px; width: 100%; max-width: 380px; padding: 24px 22px;
+            border-radius: 22px; text-align: center;
+            background: linear-gradient(180deg, rgba(159, 216, 255, 0.12), rgba(159, 216, 255, 0.03));
+            border: 1px solid rgba(159, 216, 255, 0.35);
+            box-shadow: 0 0 60px rgba(159, 216, 255, 0.18), inset 0 0 30px rgba(159, 216, 255, 0.08);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+        #patronus-container p { margin: 0 0 16px; font-size: 1.05rem; line-height: 1.7; color: #dff1ff; }
+        #patronus-input {
+            width: 100%; padding: 12px; border-radius: 12px; text-align: center; font-size: 1.15rem; direction: ltr;
+            background: rgba(9, 12, 28, 0.6); border: 1px solid rgba(159, 216, 255, 0.35); color: #fff; outline: none; margin-bottom: 12px;
+        }
+        #patronus-input:focus { border-color: var(--spectral); box-shadow: 0 0 0 4px rgba(159, 216, 255, 0.12); }
+        #call-btn-patronus {
+            width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 600; color: var(--ink);
+            background: linear-gradient(180deg, #e8f6ff, var(--spectral)); box-shadow: 0 0 30px rgba(159, 216, 255, 0.45);
+            transition: transform 0.2s var(--ease-out);
+        }
+        #call-btn-patronus:active { transform: scale(0.97); }
+
+        /* ---------- spell book ---------- */
+        #book-scrim { position: fixed; inset: 0; z-index: 10010; background: rgba(5, 7, 18, 0.55); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        #book-scrim.open { opacity: 1; pointer-events: auto; }
+        #grimoire {
+            position: fixed; top: 0; bottom: 0; inset-inline-end: 0; z-index: 10011;
+            width: min(380px, 88vw); display: flex; flex-direction: column; text-align: start;
+            background: linear-gradient(180deg, #1c2346 0%, #11162d 100%);
+            border-inline-start: 1px solid var(--line); box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+            transform: translateX(-105%); visibility: hidden;
+            transition: transform 0.45s var(--ease-out), visibility 0s linear 0.45s;
+        }
+        #grimoire.open { transform: translateX(0); visibility: visible; transition: transform 0.45s var(--ease-out), visibility 0s; }
+        .book-head { display: flex; align-items: center; justify-content: space-between; padding: max(18px, env(safe-area-inset-top)) 20px 12px; }
+        .book-head h2 { margin: 0; font-family: var(--display); font-size: 1.9rem; color: var(--gold); font-weight: 700; }
+        .book-head p { margin: 2px 0 0; font-size: 0.85rem; color: var(--parchment-dim); }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--gold); display: grid; place-items: center; flex: none; }
+        .icon-btn:hover { background: rgba(232, 194, 122, 0.1); }
+        .icon-btn svg { width: 18px; height: 18px; }
+        .book-body { overflow-y: auto; padding: 4px 12px max(24px, env(safe-area-inset-bottom)); overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(232, 194, 122, 0.25) transparent; }
+        .book-group h3 { margin: 18px 8px 6px; font-size: 0.82rem; font-weight: 500; color: rgba(232, 194, 122, 0.7); }
+        .spell-row {
+            width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+            padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent; text-align: start;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .spell-row:hover { background: rgba(232, 194, 122, 0.07); border-color: rgba(232, 194, 122, 0.18); }
+        .spell-row .name { font-family: var(--display); font-size: 1.35rem; color: var(--parchment); direction: ltr; text-transform: capitalize; line-height: 1.3; }
+        .spell-row .what { font-size: 0.85rem; color: var(--parchment-dim); }
+        .spell-row.hostile .name { color: #ffb4b0; }
+
+        /* ---------- spell effects ---------- */
+        body.lumos-active { background: #fffaf0; color: #2a2210; }
+        body.lumos-active #status { color: #5c4a22; }
+        body.lumos-active h1, body.lumos-active #spell-result { background: linear-gradient(180deg, #8a6420 0%, #4a3510 100%); -webkit-background-clip: text; background-clip: text; filter: none; }
+        body.lumos-active .ring text { fill: rgba(110, 80, 24, 0.6); }
+        body.lumos-active .ring circle { stroke: rgba(110, 80, 24, 0.3); }
+        body.lumos-active #patronus-container { background: rgba(255, 255, 255, 0.6); border-color: rgba(40, 90, 140, 0.35); }
+        body.lumos-active #patronus-container p { color: #1d3550; }
+        #lumos-bloom {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff7dc 35%, #ffe9b0 70%, #f5d88f 100%);
+            transition: opacity 1.2s ease;
+        }
+        body.lumos-active #lumos-bloom { opacity: 1; }
+
+        body.frozen { pointer-events: none !important; user-select: none; filter: grayscale(100%) contrast(140%) brightness(85%); }
+        #frost { position: fixed; inset: 0; z-index: 9990; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0) 45%, rgba(210,235,255,0.55) 85%, rgba(240,250,255,0.9) 100%); }
+        body.frozen #frost { opacity: 1; }
+
+        body.incendio-active { background-color: #1a0603; }
+        #fire-glow { position: fixed; inset: auto 0 0 0; height: 70vh; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+            background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(255, 110, 20, 0.55) 0%, rgba(200, 30, 0, 0.25) 40%, rgba(0, 0, 0, 0) 75%); }
+        body.incendio-active #fire-glow { opacity: 1; animation: glow-flicker 0.18s infinite alternate; }
+        @keyframes glow-flicker { from { opacity: 0.85; } to { opacity: 1; } }
+
+        #fiendfyre-container { position: fixed; bottom: -100vh; inset-inline: 0; display: flex; justify-content: center; align-items: flex-end; gap: 30px; pointer-events: none; z-index: 31; transition: bottom 2s var(--ease-out), opacity 1s ease; opacity: 0; }
+        body.fiendfyre-active #fiendfyre-container { bottom: 4vh; opacity: 1; }
+        .fiendfyre-beast { font-size: clamp(7rem, 22vw, 13rem); animation: fiendfyre-move 3s infinite alternate ease-in-out, fiendfyre-flicker 0.15s infinite alternate; }
+        .fiendfyre-beast.snake { font-size: clamp(8rem, 26vw, 15rem); } .fiendfyre-beast.dragon { animation-delay: 0.5s; }
         @keyframes fiendfyre-move { 0% { transform: translateY(0) scale(1) rotate(-10deg); } 100% { transform: translateY(-30px) scale(1.1) rotate(10deg); } }
-        @keyframes fiendfyre-flicker { 0% { opacity: 0.85; filter: grayscale(100%) sepia(100%) hue-rotate(-20deg) saturate(12) brightness(1.2) drop-shadow(0 -10px 15px #ff0000); } 100% { opacity: 1; filter: grayscale(100%) sepia(100%) hue-rotate(-30deg) saturate(18) brightness(1.6) drop-shadow(0 -15px 35px #ff8c00); } }
+        @keyframes fiendfyre-flicker { 0% { opacity: 0.85; } 100% { opacity: 1; } }
 
-        #water-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 0; background: rgba(28, 163, 236, 0.7); z-index: 10; pointer-events: none; transition: height 2s ease-in-out, opacity 1.5s ease-in-out; box-shadow: inset 0 20px 50px rgba(255, 255, 255, 0.4); border-top: 5px solid rgba(255, 255, 255, 0.5); opacity: 1; }
+        #water-container { position: fixed; bottom: 0; inset-inline: 0; height: 0; z-index: 25; pointer-events: none; opacity: 1;
+            background: linear-gradient(180deg, rgba(60, 170, 235, 0.72) 0%, rgba(14, 70, 140, 0.88) 100%);
+            transition: height 2.2s cubic-bezier(0.45, 0, 0.2, 1), opacity 1.5s ease; overflow-x: clip; }
         body.aguamenti-active #water-container { height: 100vh; }
+        #water-container .wave { visibility: hidden; }
+        body.aguamenti-active #water-container .wave { visibility: visible; }
+        .wave { position: absolute; left: 0; width: 200%; height: 46px; top: -44px; }
+        .wave path { fill: rgba(60, 170, 235, 0.72); }
+        .wave.back { top: -36px; opacity: 0.55; animation: wave 7s linear infinite reverse; }
+        .wave.front { animation: wave 4.5s linear infinite; }
+        @keyframes wave { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
         body.confundo-active { animation: confundo-spin 8s ease-in-out infinite alternate; filter: hue-rotate(180deg) blur(1px); }
         @keyframes confundo-spin { 0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(15deg) scale(1.1); } 50% { transform: rotate(180deg) scale(0.8); } 75% { transform: rotate(165deg) scale(1.1); } 100% { transform: rotate(360deg) scale(1); } }
 
-        body.leviosa-active .levitate-target { animation: float 4s ease-in-out infinite; }
+        body.leviosa-active .levitate-target > * { animation: float 4s ease-in-out infinite; }
+        body.leviosa-active .levitate-target > *:nth-child(2) { animation-delay: 0.3s; }
+        body.leviosa-active .levitate-target > *:nth-child(3) { animation-delay: 0.6s; }
+        body.leviosa-active .levitate-target > *:nth-child(5) { animation-delay: 0.9s; }
         @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-40px) rotate(3deg); } }
 
-        #obliviate-fog { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(230,230,230,0.9) 100%); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; }
+        #obliviate-fog { position: fixed; inset: -10%; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out;
+            background: radial-gradient(circle at 30% 40%, #fff 0%, rgba(255,255,255,0) 45%), radial-gradient(circle at 70% 60%, #f2f2f6 0%, rgba(242,242,246,0) 50%), rgba(235, 236, 242, 0.96);
+            filter: blur(20px); }
         body.obliviate-active #obliviate-fog { opacity: 1; }
 
-        .shake-intense { animation: bombarda-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .shake-intense { animation: bombarda-shake 0.45s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes bombarda-shake { 10%, 90% { transform: translate3d(-10px, 10px, 0) rotate(-2deg); } 20%, 80% { transform: translate3d(10px, -10px, 0) rotate(2deg); } 30%, 50%, 70% { transform: translate3d(-15px, 15px, 0) rotate(-4deg); } 40%, 60% { transform: translate3d(15px, -15px, 0) rotate(4deg); } }
-        #glass-crack-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9998; display: none; opacity: 0.85; }
+        #glass-crack-container { position: fixed; inset: 0; pointer-events: none; z-index: 9998; display: none; }
+        #glass-crack-container path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+        #glass-crack-container.cracking path { animation: crack-draw 0.5s var(--ease-out) forwards; }
+        #glass-crack-container.cracking path.late { animation-delay: 0.12s; }
+        @keyframes crack-draw { to { stroke-dashoffset: 0; } }
+        .shockwave { position: fixed; z-index: 9997; width: 40px; height: 40px; border-radius: 50%; pointer-events: none;
+            border: 3px solid rgba(255, 220, 160, 0.9); box-shadow: 0 0 40px rgba(255, 160, 60, 0.8), inset 0 0 30px rgba(255, 200, 120, 0.6);
+            animation: shock 0.7s var(--ease-out) forwards; }
+        @keyframes shock { from { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } to { transform: translate(-50%, -50%) scale(40); opacity: 0; } }
 
         body.reparo-active { animation: flash-gold 1s ease-out; }
-        @keyframes flash-gold { 0% { box-shadow: inset 0 0 0px #d4af37; } 50% { box-shadow: inset 0 0 150px #d4af37; } 100% { box-shadow: inset 0 0 0px #d4af37; } }
+        @keyframes flash-gold { 0% { box-shadow: inset 0 0 0 #e8c27a; } 50% { box-shadow: inset 0 0 160px #e8c27a; } 100% { box-shadow: inset 0 0 0 #e8c27a; } }
 
-        #snake-container { position: fixed; bottom: -100vh; left: 50%; transform: translateX(-50%); font-size: 10rem; z-index: 15; transition: bottom 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease; pointer-events: none; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.5)); opacity: 0; }
+        #snake-container { position: fixed; bottom: -100vh; left: 50%; transform: translateX(-50%); font-size: clamp(6rem, 22vw, 10rem); z-index: 24; transition: bottom 1.5s var(--ease-spring), opacity 0.5s ease; pointer-events: none; filter: drop-shadow(0 0 22px rgba(60, 255, 120, 0.55)); opacity: 0; }
         body.serpensortia-active #snake-container { bottom: -20px; opacity: 1; animation: slither 3s ease-in-out infinite alternate; }
         @keyframes slither { 0% { transform: translateX(-55%) rotate(-5deg); } 100% { transform: translateX(-45%) rotate(5deg); } }
         .vipera-evanesca-anim { animation: burn-vanish 1.5s forwards !important; }
         @keyframes burn-vanish { 0% { filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.5)) brightness(1); transform: translateX(-50%) scale(1); opacity: 1; } 50% { filter: drop-shadow(0 0 40px rgba(255, 69, 0, 1)) sepia(1) hue-rotate(-50deg) saturate(5) brightness(1.5); transform: translateX(-50%) scale(1.1); opacity: 0.8; } 100% { filter: blur(10px) brightness(0); transform: translateX(-50%) scale(0); opacity: 0; } }
 
-        body.duro-active { background-color: #3b3b3b; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px); }
-        body.duro-active #main-content h1, body.duro-active #main-content #status, body.duro-active #main-content #spell-result { color: #888 !important; text-shadow: 2px 2px 0px #222, -1px -1px 0px #555 !important; }
-        body.duro-active #mic-btn, body.duro-active #mode-toggle-btn { background-color: #555; border-color: #222; color: #aaa; box-shadow: inset 3px 3px 6px #222, inset -3px -3px 6px #777; }
-        body.duro-active #spell-input { background-color: #444; border-color: #222; color: #aaa; } body.duro-active #cast-btn { background-color: #555; color: #aaa; }
+        body.duro-active { background: #3a3a3c repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 5px); }
+        body.duro-active h1 { background: linear-gradient(180deg, #b9b9b9, #6d6d6d); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(2px 2px 0 #222); }
+        body.duro-active #status, body.duro-active #spell-result { color: #8d8d8d; -webkit-text-fill-color: #8d8d8d; filter: none; text-shadow: 2px 2px 0 #222; }
+        body.duro-active #mic-btn, body.duro-active .chip, body.duro-active #cast-btn { background: #5a5a5c; color: #aaa; box-shadow: inset 3px 3px 6px #262626, inset -3px -3px 6px #7a7a7a; border-color: #333; }
+        body.duro-active .ring text { fill: rgba(160, 160, 160, 0.5); }
+        body.duro-active .ring-outer, body.duro-active .ring-inner { animation-play-state: paused; }
 
         .bird-particle { position: fixed; right: -10%; font-size: 3rem; z-index: 100; animation: flyBird linear forwards; pointer-events: none; }
         @keyframes flyBird { 0% { transform: translateX(0) translateY(0) rotate(-15deg); opacity: 1; } 50% { transform: translateX(-60vw) translateY(-30px) rotate(10deg); } 100% { transform: translateX(-120vw) translateY(20px) rotate(-10deg); opacity: 0; } }
 
-        .disarmed-wand { position: fixed; font-size: 8rem; z-index: 10001; pointer-events: none; transition: left 0.8s ease-out, top 0.8s ease-out, transform 0.8s ease-out; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
+        .disarmed-wand { position: fixed; font-size: 8rem; z-index: 10001; pointer-events: none; transition: left 0.9s var(--ease-out), top 0.9s var(--ease-out), transform 0.9s var(--ease-out); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(255, 60, 60, 0.6)); }
 
-        #blood-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9997; }
-        .blood-drop { position: absolute; top: -50px; width: 12px; height: 18px; background: #8a0303; border-radius: 50% 50% 50% 0; transform: rotate(45deg); animation: fall-blood linear infinite; opacity: 0.9; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5); }
+        #blood-container { position: fixed; inset: 0; pointer-events: none; z-index: 9997; overflow: hidden; }
+        .blood-drop { position: absolute; top: -50px; width: 12px; height: 18px; background: radial-gradient(circle at 35% 35%, #d01a2c, #6e0210); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); animation: fall-blood linear infinite; opacity: 0.92; }
         @keyframes fall-blood { 0% { top: -50px; opacity: 1; } 80% { opacity: 1; } 100% { top: 100vh; opacity: 0; } }
         .healing .blood-drop { animation: heal-blood 1.5s forwards !important; }
-        @keyframes heal-blood { to { opacity: 0; transform: scale(0) rotate(45deg); } }
+        @keyframes heal-blood { to { opacity: 0; transform: scale(0) rotate(-45deg); } }
+        .slash-mark { position: fixed; z-index: 9996; height: 3px; pointer-events: none; border-radius: 3px; transform-origin: right center;
+            background: linear-gradient(90deg, rgba(160, 0, 20, 0), #c0172f 30%, #ff5a6a 50%, #c0172f 70%, rgba(160, 0, 20, 0));
+            box-shadow: 0 0 12px rgba(220, 30, 50, 0.8); animation: slash-in 0.35s var(--ease-out) both; }
+        @keyframes slash-in { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+        .healing .slash-mark, .slash-mark.heal { animation: heal-blood 1.2s forwards; }
 
-        #clown-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 15rem; z-index: 10002; pointer-events: none; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #clown-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: clamp(8rem, 30vw, 15rem); z-index: 10002; pointer-events: none; transition: transform 0.5s var(--ease-spring); }
         #clown-container.show { transform: translate(-50%, -50%) scale(1); animation: bounce-clown 2s infinite; }
         @keyframes bounce-clown { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -60%) scale(1.1); } }
 
-        #lock-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12rem; z-index: 10002; pointer-events: none; display: none; opacity: 0; }
+        #lock-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(7rem, 26vw, 12rem); z-index: 10002; pointer-events: none; display: none; opacity: 0; }
         #lock-container.show-lock { display: block; animation: lock-fade 2.5s forwards; }
-        #lock-icon { display: inline-block; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+        #lock-icon { display: inline-block; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)) drop-shadow(0 0 30px rgba(232, 194, 122, 0.6)); }
         .anim-unlock { animation: unlock-shake 0.6s ease-in-out; } .anim-lock { animation: lock-shake 0.6s ease-in-out; }
         @keyframes lock-fade { 0% { opacity: 0; transform: translate(-50%, -30%); } 15% { opacity: 1; transform: translate(-50%, -50%); } 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -70%); } }
         @keyframes unlock-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } 75% { transform: rotate(-10deg); } }
         @keyframes lock-shake { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
-        #slug-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9996; overflow: hidden; }
+        #slug-container { position: fixed; inset: 0; pointer-events: none; z-index: 9996; overflow: hidden; }
         .slug-particle { position: absolute; top: -10vh; font-size: 3rem; animation: fall-slug linear forwards; filter: drop-shadow(0 5px 10px rgba(100,255,100,0.6)); }
         @keyframes fall-slug { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(110vh) rotate(45deg); opacity: 0; } }
 
-        /* Aparecium (كشف الخبايا والإخفاء الدرامي) */
         #hidden-riddle {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; text-align: center; font-size: 2rem; font-family: 'Amiri', serif;
-            color: transparent; text-shadow: none; z-index: 10005; transition: all 2s;
-            pointer-events: none; line-height: 1.6;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(90%, 640px);
+            font-family: var(--display); font-size: clamp(1.5rem, 5.5vw, 2.2rem); line-height: 1.8;
+            color: transparent; z-index: 10005; pointer-events: none; transition: color 2.4s ease, text-shadow 2.4s ease, filter 2.4s ease;
+            filter: blur(8px);
         }
-        /* إخفاء وتعتيم كل شيء عند تفعيل Aparecium */
-        body.aparecium-active { background-color: #000; }
-        body.aparecium-active #main-content { opacity: 0; pointer-events: none; }
-        body.aparecium-active #mode-toggle-btn { opacity: 0; pointer-events: none; }
-        /* إظهار اللغز فقط */
-        body.aparecium-active #hidden-riddle { color: #fff; text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00; }
+        body.aparecium-active { background: #000; }
+        body.aparecium-active #main-content, body.aparecium-active .topbar { opacity: 0; pointer-events: none; }
+        body.aparecium-active #hidden-riddle { color: #f4fff4; filter: blur(0); text-shadow: 0 0 10px #3dff7a, 0 0 24px #1fd16b, 0 0 48px #0f8a44; }
 
-        /* Homenum Revelio */
-        .footstep { position: fixed; font-size: 4rem; opacity: 0; filter: drop-shadow(0 0 10px #d4af37); animation: step-fade 3s forwards; z-index: 50; pointer-events: none; }
+        .footstep { position: fixed; font-size: 3.4rem; opacity: 0; filter: drop-shadow(0 0 14px var(--gold)); animation: step-fade 3s forwards; z-index: 50; pointer-events: none; }
         @keyframes step-fade { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
 
-        /* Prior Incantato */
-        .ghost-spell { position: fixed; left: 50%; bottom: 10%; transform: translateX(-50%); font-size: 2.5rem; color: rgba(255,255,255,0.8); text-shadow: 0 0 15px rgba(255,255,255,1); font-family: 'Cairo', sans-serif; font-weight: bold; animation: float-up-ghost 4s forwards linear; z-index: 10000; pointer-events: none; text-transform: capitalize; }
-        @keyframes float-up-ghost { 0% { bottom: 10%; opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { bottom: 90%; opacity: 0; } }
+        .ghost-spell { position: fixed; left: 50%; bottom: 10%; transform: translateX(-50%); font-family: var(--display); font-size: clamp(1.8rem, 7vw, 2.6rem); color: rgba(230, 245, 255, 0.85); text-shadow: 0 0 18px rgba(159, 216, 255, 1); animation: float-up-ghost 4s forwards linear; z-index: 10000; pointer-events: none; text-transform: capitalize; direction: ltr; white-space: nowrap; }
+        @keyframes float-up-ghost { 0% { bottom: 10%; opacity: 0; filter: blur(6px); } 20% { opacity: 1; filter: blur(0); } 80% { opacity: 1; } 100% { bottom: 90%; opacity: 0; filter: blur(4px); } }
 
-        /* Morsmordre */
-        body.morsmordre-active { background-color: #001100; }
-        #dark-mark-container { position: fixed; top: 5vh; left: 50%; transform: translateX(-50%) scale(0); font-size: 15rem; color: #00ff00; filter: drop-shadow(0 0 30px #00ff00); z-index: 9995; pointer-events: none; transition: transform 2s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; display: flex; flex-direction: column; align-items: center; line-height: 0.8; }
-        body.morsmordre-active #dark-mark-container { transform: translateX(-50%) scale(1); opacity: 0.9; }
+        body.morsmordre-active { background: radial-gradient(ellipse at 50% 20%, #0f3a1c 0%, #031207 60%, #000 100%); }
+        #dark-mark-container { position: fixed; top: 5vh; left: 50%; transform: translateX(-50%) scale(0); font-size: clamp(8rem, 30vw, 15rem); z-index: 10; pointer-events: none; transition: transform 2s var(--ease-spring), opacity 1.2s ease; opacity: 0; display: flex; flex-direction: column; align-items: center; line-height: 0.8; filter: drop-shadow(0 0 30px #1fd16b) drop-shadow(0 0 70px #0f8a44); }
+        body.morsmordre-active #dark-mark-container { transform: translateX(-50%) scale(1); opacity: 0.92; animation: mark-hover 5s ease-in-out 2s infinite; }
+        @keyframes mark-hover { 50% { transform: translateX(-50%) scale(1.04) translateY(-8px); } }
 
-        /* Protego */
-        #protego-shield { position: fixed; top:0; left:0; width:100%; height:100%; box-shadow: inset 0 0 0 rgba(0, 150, 255, 0); pointer-events: none; z-index: 9999; transition: all 0.5s ease; border: 0px solid rgba(0, 150, 255, 0); }
-        body.protego-active #protego-shield { box-shadow: inset 0 0 150px rgba(0, 150, 255, 0.4), inset 0 0 30px rgba(0, 150, 255, 0.8); border: 5px solid rgba(0, 150, 255, 0.6); }
-        .shield-ripple { background-color: rgba(0, 150, 255, 0.4) !important; }
+        #protego-shield { position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0; transition: opacity 0.5s ease;
+            box-shadow: inset 0 0 160px rgba(80, 170, 255, 0.45), inset 0 0 34px rgba(120, 200, 255, 0.85);
+            border: 3px solid rgba(140, 210, 255, 0.6);
+            background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(159, 216, 255, 0.05) 0deg 10deg, rgba(159, 216, 255, 0) 10deg 20deg); }
+        body.protego-active #protego-shield { opacity: 1; animation: shield-hum 2.4s ease-in-out infinite; }
+        @keyframes shield-hum { 50% { box-shadow: inset 0 0 200px rgba(80, 170, 255, 0.55), inset 0 0 44px rgba(120, 200, 255, 1); } }
+        .shield-ripple { background-color: rgba(80, 170, 255, 0.35) !important; }
 
-        /* المحتوى الرئيسي */
-        #main-content {
-            --scale: 1; --translateY: 0; --skewX: 0deg; --rotate: 0deg;
-            display: flex; flex-direction: column; align-items: center; width: 100%;
-            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 1s ease;
-            transform: scale(var(--scale)) translateY(var(--translateY)) skewX(var(--skewX)) rotate(var(--rotate)); z-index: 20;
-        }
-        #main-content.text-large { --scale: 1.4; } #main-content.text-small { --scale: 0.65; }
-        #main-content.descendo-active { --translateY: 35vh; } 
-        
-        #main-content.diffindo-active { --skewX: -5deg; --rotate: 2deg; }
+        .diffindo-slash { position: fixed; inset: 0; z-index: 9999; pointer-events: none; animation: flash-slash 0.5s ease-out forwards;
+            background: linear-gradient(to bottom right, transparent 49.3%, rgba(255,255,255,0.95) 49.8%, rgba(255,255,255,0.95) 50.2%, transparent 50.7%); }
+        @keyframes flash-slash { 0% { opacity: 1; clip-path: inset(0 0 100% 0); } 40% { clip-path: inset(0 0 0 0); } 100% { opacity: 0; } }
         #main-content.diffindo-active h1, #main-content.diffindo-active #status, #main-content.diffindo-active #spell-result { position: relative; }
-        #main-content.diffindo-active h1::after, #main-content.diffindo-active #status::after, #main-content.diffindo-active #spell-result::after { content: ''; position: absolute; top: 50%; left: -5%; width: 110%; height: 3px; background: #fff; transform: rotate(-2deg); box-shadow: 0 0 5px #fff; }
-        .diffindo-slash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom right, transparent 49%, rgba(255,255,255,0.9) 49.5%, rgba(255,255,255,0.9) 50.5%, transparent 51%); z-index: 9999; pointer-events: none; animation: flash-slash 0.5s ease-out forwards; }
-        @keyframes flash-slash { 0% { opacity: 1; transform: scale(1.5); } 100% { opacity: 0; transform: scale(1); } }
+        #main-content.diffindo-active h1::after, #main-content.diffindo-active #status::after, #main-content.diffindo-active #spell-result::after { content: ''; position: absolute; top: 50%; left: -5%; width: 110%; height: 2px; background: #fff; transform: rotate(-2deg); box-shadow: 0 0 8px #fff; }
 
-        /* العناصر الأساسية */
-        h1 { font-size: 3em; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); margin-bottom: 10px; }
-        #status { font-size: 1.5em; margin: 10px 0 30px 0; height: 30px; font-family: 'Cairo', sans-serif; }
-        #mic-btn { background-color: rgba(0, 0, 0, 0.5); color: #d4af37; border: 2px solid #d4af37; border-radius: 50%; width: 100px; height: 100px; font-size: 3em; cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; outline: none; }
-        #mic-btn:hover { background-color: #d4af37; color: #0d1117; box-shadow: 0 0 20px #d4af37; }
-        #mic-btn.listening { animation: pulse 1.5s infinite; background-color: #ae0001; color: white; border-color: #ae0001; }
-        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 0, 1, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(174, 0, 1, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(174, 0, 1, 0); } }
-        #spell-result { margin-top: 30px; font-size: 2.5em; font-weight: bold; text-transform: capitalize; direction: ltr; letter-spacing: 2px; color: #ecb939; }
+        #kill-flash { position: fixed; inset: 0; z-index: 20000; pointer-events: none; background: #3dff7a; opacity: 0; }
+        #game-over {
+            position: fixed; inset: 0; z-index: 20001; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+            background: radial-gradient(ellipse at center, #1a0004 0%, #000 70%); padding: 24px;
+        }
+        #game-over.show { display: flex; }
+        #game-over h2 { margin: 0; font-family: var(--display); font-size: clamp(3rem, 14vw, 5.5rem); color: #c0172f; text-shadow: 0 0 40px rgba(192, 23, 47, 0.7); direction: ltr; }
+        #game-over p { margin: 0; color: rgba(239, 227, 200, 0.6); }
+        #game-over button { margin-top: 8px; padding: 12px 26px; border-radius: 999px; border: 1px solid rgba(232, 194, 122, 0.5); background: transparent; color: var(--gold); font-weight: 500; }
+        #game-over button:hover { background: rgba(232, 194, 122, 0.1); }
 
-        /* نافذة الباتروناس */
-        #patronus-container { display: none; margin-top: 30px; background: rgba(20, 20, 20, 0.9); padding: 25px; border: 2px solid #ecb939; border-radius: 15px; box-shadow: 0 0 15px rgba(236, 185, 57, 0.2); font-family: 'Cairo', sans-serif; max-width: 400px; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        #patronus-container p { font-size: 1.2em; margin-bottom: 20px; line-height: 1.5; }
-        #patronus-input { width: 80%; padding: 10px; font-size: 1.2em; border: 1px solid #d4af37; border-radius: 5px; background: #111; color: #fff; text-align: center; margin-bottom: 15px; }
-        #call-btn-patronus { background-color: #2a623d; color: white; border: none; padding: 10px 20px; font-size: 1.2em; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+        /* ---------- Noto animated art ---------- */
+        .art { display: block; width: 1em; height: 1em; object-fit: contain; user-select: none; -webkit-user-drag: none; }
+        .fiendfyre-beast .art { filter: grayscale(100%) sepia(100%) hue-rotate(-25deg) saturate(9) brightness(1.25) drop-shadow(0 -8px 18px rgba(255, 40, 0, 0.9)) drop-shadow(0 0 40px rgba(255, 120, 0, 0.7)); }
+        #dark-mark-container .art { filter: grayscale(100%) sepia(100%) hue-rotate(60deg) saturate(8) brightness(1.05); }
+        .footstep .art { filter: grayscale(100%) sepia(100%) saturate(3) brightness(1.45); }
+        #dark-mark-container .art-skull { width: 0.85em; height: 0.85em; }
+        #dark-mark-container .tongue { width: 0.5em; height: 0.5em; margin-top: -0.18em; transform: scaleY(-1); }
+        #clown-container .art { filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5)); }
+        #lock-icon .lock-open { display: none; }
+        #lock-icon.is-open .lock-open { display: block; }
+        #lock-icon.is-open .lock-closed { display: none; }
+        .disarmed-wand .art { filter: drop-shadow(0 0 18px rgba(255, 220, 140, 0.7)); }
+        .bird-particle .art { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)); }
+        .slug-particle .art { filter: drop-shadow(0 5px 10px rgba(100, 255, 100, 0.5)); }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+        @media (max-width: 420px) {
+            .sigil { width: 208px; height: 208px; }
+            #mic-btn { width: 106px; height: 106px; }
+            .chip { padding: 8px 13px; font-size: 0.9rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ring-outer, .ring-inner, .sigil.listening .ripple, #mic-btn.listening,
+            body.protego-active #protego-shield, body.morsmordre-active #dark-mark-container,
+            .wave, body.incendio-active #fire-glow { animation: none !important; }
+            #main-content, #grimoire { transition-duration: 0.01s; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- موسيقى هاري بوتر -->
-    <audio id="hp-music" src="hp-theme.mp3" loop></audio>
+    <audio id="hp-music" src="hp-theme.mp3" loop preload="none"></audio>
 
-    <button id="mode-toggle-btn">⌨️ كتابة</button>
+    <canvas id="dust" aria-hidden="true"></canvas>
+    <div id="lumos-bloom" aria-hidden="true"></div>
+    <div id="fire-glow" aria-hidden="true"></div>
 
-    <!-- درع الحماية -->
-    <div id="protego-shield"></div>
+    <header class="topbar">
+        <button id="mode-toggle-btn" class="chip" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/></svg>
+            <span>كتابة</span>
+        </button>
+        <button id="book-btn" class="chip" type="button" aria-controls="grimoire" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M12 7.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 9.6l2-.3z"/></svg>
+            <span>كتاب التعاويذ</span>
+        </button>
+    </header>
 
-    <!-- رسالة أباريسيوم المخفية الجديدة -->
+    <div id="protego-shield" aria-hidden="true"></div>
+    <div id="frost" aria-hidden="true"></div>
+
     <div id="hidden-riddle">"أنا فاكهة مرسومة في لوحة بالقرب من قبو هافلباف، إذا دغدغتني أضحك وأتحول إلى مقبض باب، فمن أنا؟"</div>
 
-    <!-- علامة السحر الأسود -->
-    <div id="dark-mark-container">
-        <div>💀</div>
-        <div style="font-size: 8rem; margin-top:-60px;">🐍</div>
+    <div id="dark-mark-container" aria-hidden="true">
+        <img class="art art-skull" src="assets/noto/skull.webp" alt="">
+        <img class="art tongue" src="assets/noto/snake.webp" alt="">
     </div>
 
-    <!-- حاويات التأثيرات البصرية المستقلة -->
-    <div id="fire-container"></div>
-    <div id="fiendfyre-container"><div class="fiendfyre-beast snake">🐍</div><div class="fiendfyre-beast dragon">🐉</div></div>
-    <div id="water-container"></div>
-    <div id="obliviate-fog"></div>
-    <div id="snake-container">🐍</div>
-    <div id="blood-container"></div>
-    <div id="clown-container">🤡</div>
-    <div id="lock-container"><div id="lock-icon">🔒</div></div>
-    <div id="slug-container"></div>
-    
-    <!-- تأثير الزجاج المهشم -->
-    <div id="glass-crack-container">
+    <div id="fiendfyre-container" aria-hidden="true">
+        <div class="fiendfyre-beast snake"><img class="art" src="assets/noto/snake.webp" alt=""></div>
+        <div class="fiendfyre-beast dragon"><img class="art" src="assets/noto/dragon.webp" alt=""></div>
+    </div>
+
+    <div id="water-container" aria-hidden="true">
+        <svg class="wave back" viewBox="0 0 1200 46" preserveAspectRatio="none"><path d="M0 23 Q75 0 150 23 T300 23 T450 23 T600 23 T750 23 T900 23 T1050 23 T1200 23 V46 H0Z"/></svg>
+        <svg class="wave front" viewBox="0 0 1200 46" preserveAspectRatio="none"><path d="M0 23 Q75 46 150 23 T300 23 T450 23 T600 23 T750 23 T900 23 T1050 23 T1200 23 V46 H0Z"/></svg>
+    </div>
+    <div id="obliviate-fog" aria-hidden="true"></div>
+    <div id="snake-container" aria-hidden="true"><img class="art" src="assets/noto/snake.webp" alt=""></div>
+    <div id="blood-container" aria-hidden="true"></div>
+    <div id="clown-container" aria-hidden="true"><img class="art" src="assets/noto/clown.webp" alt=""></div>
+    <div id="lock-container" aria-hidden="true">
+        <div id="lock-icon"><img class="art lock-closed" src="assets/noto/locked.webp" alt=""><img class="art lock-open" src="assets/noto/unlocked.png" alt=""></div>
+    </div>
+    <div id="slug-container" aria-hidden="true"></div>
+
+    <div id="glass-crack-container" aria-hidden="true">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%; height:100%;">
-            <path d="M50,50 L0,0 M50,50 L100,0 M50,50 L100,100 M50,50 L0,100 M50,50 L20,0 M50,50 L80,0 M50,50 L100,20 M50,50 L100,80 M50,50 L80,100 M50,50 L20,100 M50,50 L0,80 M50,50 L0,20" stroke="rgba(255,255,255,0.8)" stroke-width="0.3" fill="none"/>
+            <g stroke="rgba(255,255,255,0.85)" stroke-width="0.3" fill="none">
+                <path pathLength="1" d="M50,50 L0,0"/><path pathLength="1" d="M50,50 L100,0"/><path pathLength="1" d="M50,50 L100,100"/><path pathLength="1" d="M50,50 L0,100"/>
+                <path pathLength="1" d="M50,50 L20,0"/><path pathLength="1" d="M50,50 L80,0"/><path pathLength="1" d="M50,50 L100,20"/><path pathLength="1" d="M50,50 L100,80"/>
+                <path pathLength="1" d="M50,50 L80,100"/><path pathLength="1" d="M50,50 L20,100"/><path pathLength="1" d="M50,50 L0,80"/><path pathLength="1" d="M50,50 L0,20"/>
+            </g>
             <path d="M48,48 L52,48 L52,52 L48,52 Z" fill="rgba(255,255,255,0.9)"/>
-            <path d="M20,20 L30,10 L40,25 M80,20 L70,10 L60,25 M80,80 L70,90 L60,75 M20,80 L30,90 L40,75 M10,50 L20,40 L30,50 M90,50 L80,60 L70,50" stroke="rgba(255,255,255,0.6)" stroke-width="0.15" fill="none"/>
+            <g stroke="rgba(255,255,255,0.6)" stroke-width="0.15" fill="none">
+                <path class="late" pathLength="1" d="M20,20 L30,10 L40,25"/><path class="late" pathLength="1" d="M80,20 L70,10 L60,25"/><path class="late" pathLength="1" d="M80,80 L70,90 L60,75"/>
+                <path class="late" pathLength="1" d="M20,80 L30,90 L40,75"/><path class="late" pathLength="1" d="M10,50 L20,40 L30,50"/><path class="late" pathLength="1" d="M90,50 L80,60 L70,50"/>
+            </g>
         </svg>
     </div>
 
-    <!-- المحتوى الرئيسي للموقع -->
-    <div id="main-content" class="levitate-target">
+    <main id="main-content" class="levitate-target">
         <h1>عصاك السحرية جاهزة</h1>
-        <div id="status">اضغط على الزر وانطق التعويذة</div>
-        
-        <button id="mic-btn">🎙️</button>
+        <div id="status" role="status" aria-live="polite">اضغط على الزر وانطق التعويذة</div>
 
-        <div id="text-input-container">
-            <input type="text" id="spell-input" placeholder="اكتب التعويذة هنا..." autocomplete="off">
-            <button id="cast-btn">إلقاء ✨</button>
+        <div class="sigil" id="sigil">
+            <svg class="ring" viewBox="0 0 236 236" aria-hidden="true">
+                <defs>
+                    <path id="ring-o" d="M118,118 m-108,0 a108,108 0 1,1 216,0 a108,108 0 1,1 -216,0"/>
+                    <path id="ring-i" d="M118,118 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/>
+                </defs>
+                <g class="ring-outer">
+                    <circle cx="118" cy="118" r="117" fill="none" stroke="rgba(232,194,122,0.28)" stroke-width="1"/>
+                    <circle cx="118" cy="118" r="99" fill="none" stroke="rgba(232,194,122,0.18)" stroke-width="1"/>
+                    <text><textPath href="#ring-o" startOffset="0">LUMOS ✦ PROTEGO ✦ ACCIO ✦ REPARO ✦ ALOHOMORA ✦ INCENDIO ✦ AGUAMENTI ✦</textPath></text>
+                </g>
+                <g class="ring-inner">
+                    <circle cx="118" cy="118" r="78" fill="none" stroke="rgba(232,194,122,0.14)" stroke-width="1" stroke-dasharray="2 6"/>
+                    <text><textPath href="#ring-i" startOffset="0">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</textPath></text>
+                </g>
+            </svg>
+            <span class="ripple"></span><span class="ripple"></span><span class="ripple"></span>
+            <button id="mic-btn" type="button" aria-label="اضغط وانطق التعويذة">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21.5M8.5 21.5h7"/></svg>
+            </button>
         </div>
 
-        <div id="spell-result"></div>
+        <div id="text-input-container">
+            <form class="cast-form" id="cast-form" autocomplete="off">
+                <label for="spell-input" class="sr-only">التعويذة</label>
+                <input type="text" id="spell-input" placeholder="اكتب التعويذة هنا..." autocomplete="off" autocapitalize="off" spellcheck="false" dir="auto" enterkeyhint="send">
+                <button id="cast-btn" type="submit">إلقاء ✨</button>
+            </form>
+        </div>
+
+        <div id="spell-result" aria-live="polite"></div>
 
         <div id="patronus-container">
             <p>اختار مين اكتر حد بتتبسط لما تكلمه (الباترونس بتاعك يعني) 🦌✨</p>
             <input type="tel" id="patronus-input" placeholder="رقم الهاتف..." autocomplete="off">
-            <br>
-            <button id="call-btn-patronus" onclick="callPatronus()">استدعاء</button>
+            <button id="call-btn-patronus" type="button" onclick="callPatronus()">استدعاء</button>
         </div>
+    </main>
+
+    <div id="book-scrim"></div>
+    <aside id="grimoire" aria-label="كتاب التعاويذ" aria-hidden="true">
+        <div class="book-head">
+            <div>
+                <h2>كتاب التعاويذ</h2>
+                <p>انطقها بالإنجليزي، أو اضغط عليها عشان تلقيها</p>
+            </div>
+            <button class="icon-btn" id="book-close" type="button" aria-label="اقفل الكتاب">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+        </div>
+        <div class="book-body" id="book-body"></div>
+    </aside>
+
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div id="kill-flash" aria-hidden="true"></div>
+    <div id="game-over" role="alertdialog" aria-label="Game over">
+        <h2>GAME OVER</h2>
+        <p>التعويذة المحظورة ليها تمن</p>
+        <button type="button" onclick="location.reload()">ابدأ من جديد</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.js"></script>
     <script>
         const micBtn = document.getElementById('mic-btn'); const statusText = document.getElementById('status');
         const resultText = document.getElementById('spell-result'); const patronusContainer = document.getElementById('patronus-container');
         const mainContent = document.getElementById('main-content'); const modeToggleBtn = document.getElementById('mode-toggle-btn');
         const textInputContainer = document.getElementById('text-input-container'); const spellInput = document.getElementById('spell-input');
-        const castBtn = document.getElementById('cast-btn'); const body = document.body; const protegoShield = document.getElementById('protego-shield');
-        
-        let cameraTrack = null; let fireInterval = null; let isFireActive = false; let fireTimeout = null;
+        const castForm = document.getElementById('cast-form'); const body = document.body; const protegoShield = document.getElementById('protego-shield');
+        const sigil = document.getElementById('sigil');
+
+        let cameraTrack = null; let fireTimeout = null; let isFireActive = false;
         let leviosaTimeout = null; let confundoTimeout = null; let isTextMode = false; let recognition = null;
-        let isProtegoActive = false; let spellHistory = []; let apareciumTimeout = null;
+        let isProtegoActive = false; let spellHistory = []; let apareciumTimeout = null; let protegoTimeout = null;
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const M = window.Motion;
+
+        function animate(el, keyframes, opts = {}) {
+            if (!el) return;
+            if (reduceMotion) { opts = { ...opts, duration: 0.01, type: undefined }; }
+            if (M && M.animate) return M.animate(el, keyframes, opts);
+            return el.animate(keyframes, { duration: (opts.duration || 0.4) * 1000, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', delay: (opts.delay || 0) * 1000, fill: 'both' });
+        }
 
         const validSpells = [
-            "lumos", "nox", "aguamenti", "incendio", "expecto patronum", "petrificus totalus", "avada kedavra", 
+            "lumos", "nox", "aguamenti", "incendio", "expecto patronum", "petrificus totalus", "avada kedavra",
             "confundo", "wingardium leviosa", "obliviate", "bombarda", "reparo", "engorgio", "reducio",
-            "serpensortia", "vipera evanesca", "avis", "descendo", "diffindo", "duro", "finite incantatem", 
-            "fiendfyre", "expelliarmus", "sectumsempra", "vulnera sanentur", "riddikulus", "alohomora", "colloportus", 
+            "serpensortia", "vipera evanesca", "avis", "descendo", "diffindo", "duro", "finite incantatem",
+            "fiendfyre", "expelliarmus", "sectumsempra", "vulnera sanentur", "riddikulus", "alohomora", "colloportus",
             "slugulus eructo", "aparecium", "homenum revelio", "sonorus", "quietus", "prior incantato", "morsmordre", "protego"
         ];
 
         const hostileSpells = [
-            "incendio", "fiendfyre", "bombarda", "descendo", "diffindo", 
+            "incendio", "fiendfyre", "bombarda", "descendo", "diffindo",
             "sectumsempra", "slugulus eructo", "confundo", "serpensortia", "morsmordre"
         ];
 
+        const spellBook = [
+            { title: "النور والعناصر", spells: [
+                ["lumos", "نور يملا الشاشة، أو كشاف الموبايل لو متاح"], ["nox", "يطفي النور"],
+                ["incendio", "نار طالعة من تحت"], ["fiendfyre", "نار اللعنة بوحوشها"], ["aguamenti", "مية تغرق المكان وتطفي أي نار"] ] },
+            { title: "الحماية والكشف", spells: [
+                ["protego", "درع يصد الهجوم لمدة ١٥ ثانية"], ["expecto patronum", "استدعي الباترونس بتاعك"],
+                ["aparecium", "يكشف لغز متخبي"], ["homenum revelio", "يكشف آثار أقدام"], ["prior incantato", "يعرض آخر ٣ تعاويذ"],
+                ["alohomora", "يفتح القفل"], ["colloportus", "يقفل القفل"] ] },
+            { title: "الهجوم", spells: [
+                ["expelliarmus", "يطير العصاية"], ["bombarda", "انفجار يكسر الشاشة"], ["diffindo", "قطع في الصفحة"],
+                ["sectumsempra", "جروح ونزيف"], ["confundo", "لخبطة ودوخة"], ["petrificus totalus", "تجميد كل حاجة ١٠ ثواني"],
+                ["slugulus eructo", "مطر بزاقات"], ["serpensortia", "يطلع تعبان"], ["morsmordre", "العلامة السودا في السما"],
+                ["avada kedavra", "التعويذة المحظورة"] ] },
+            { title: "التحويل", spells: [
+                ["wingardium leviosa", "كل حاجة تطير"], ["engorgio", "تكبير"], ["reducio", "تصغير"], ["descendo", "ينزل الصفحة لتحت"],
+                ["duro", "يحول كل حاجة حجر"], ["avis", "سرب عصافير"], ["riddikulus", "يحول الخوف لضحك"] ] },
+            { title: "الإصلاح والإبطال", spells: [
+                ["reparo", "يصلح الكسر والقطع"], ["vulnera sanentur", "يعالج الجروح"], ["finite incantatem", "يفك الحجر"],
+                ["vipera evanesca", "يحرق التعبان"], ["obliviate", "يمسح كل السحر ويرجع للبداية"] ] },
+            { title: "الصوت", spells: [ ["sonorus", "يشغل الموسيقى"], ["quietus", "يوقف الموسيقى"] ] }
+        ];
+
+        /* ---------------- Noto animated art ---------------- */
+        const art = (name, ext = 'webp') => `<img class="art" src="assets/noto/${name}.${ext}" alt="">`;
+
+        /* ---------------- canvas engines ---------------- */
+        const fx = document.getElementById('fx'); const fxCtx = fx.getContext('2d');
+        const dust = document.getElementById('dust'); const dustCtx = dust.getContext('2d');
+        let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+        function resize() {
+            W = window.innerWidth; H = window.innerHeight;
+            for (const c of [fx, dust]) { c.width = W * DPR; c.height = H * DPR; }
+            fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); dustCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+        resize(); window.addEventListener('resize', resize);
+
+        const particles = []; const MAX_PARTICLES = reduceMotion ? 120 : 900;
+        function emit(p) { if (particles.length < MAX_PARTICLES) particles.push(p); }
+
+        const motes = [];
+        if (!reduceMotion) for (let i = 0; i < 46; i++) motes.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + 0.4, s: Math.random() * 0.00012 + 0.00004, p: Math.random() * Math.PI * 2 });
+
+        let fireRate = 0; let fireHeat = 1; let lastT = performance.now();
+        function frame(t) {
+            const dt = Math.min((t - lastT) / 16.67, 3); lastT = t;
+
+            dustCtx.clearRect(0, 0, W, H);
+            for (let i = 0; i < motes.length; i++) {
+                const m = motes[i]; m.y -= m.s * dt * 16.67; m.p += 0.01 * dt; if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
+                const a = 0.25 + Math.sin(m.p) * 0.2;
+                dustCtx.fillStyle = `rgba(232, 194, 122, ${a})`;
+                dustCtx.beginPath(); dustCtx.arc(m.x * W + Math.sin(m.p) * 8, m.y * H, m.r, 0, Math.PI * 2); dustCtx.fill();
+            }
+
+            if (fireRate > 0) {
+                const n = Math.round(fireRate * dt);
+                for (let i = 0; i < n; i++) {
+                    const big = Math.random() < 0.35;
+                    emit({ x: Math.random() * W, y: H + 20, vx: (Math.random() - 0.5) * 1.2, vy: -(Math.random() * 3.2 + 2.2) * fireHeat,
+                        life: 0, max: Math.random() * 70 + 50, size: big ? Math.random() * 46 + 28 : Math.random() * 3 + 1.5,
+                        kind: big ? 'flame' : 'ember', hue: Math.random() * 30 + (fireHeat > 1.2 ? 0 : 15), g: -0.02, drag: 0.995, wob: Math.random() * 6 });
+                }
+            }
+
+            fxCtx.clearRect(0, 0, W, H);
+            fxCtx.globalCompositeOperation = 'lighter';
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.life += dt;
+                if (p.life >= p.max) { particles[i] = particles[particles.length - 1]; particles.pop(); continue; }
+                p.vx *= p.drag; p.vy = p.vy * p.drag + p.g * dt;
+                p.x += (p.vx + (p.wob ? Math.sin((p.life + p.wob * 10) * 0.08) * 0.6 : 0)) * dt; p.y += p.vy * dt;
+                const k = 1 - p.life / p.max;
+                if (p.kind === 'flame') {
+                    const r = p.size * (0.4 + k * 0.6);
+                    const grd = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+                    grd.addColorStop(0, `hsla(${p.hue + 30}, 100%, 70%, ${0.55 * k})`);
+                    grd.addColorStop(0.45, `hsla(${p.hue}, 100%, 50%, ${0.32 * k})`);
+                    grd.addColorStop(1, `hsla(${p.hue}, 100%, 40%, 0)`);
+                    fxCtx.fillStyle = grd; fxCtx.beginPath(); fxCtx.arc(p.x, p.y, r, 0, Math.PI * 2); fxCtx.fill();
+                } else {
+                    fxCtx.globalAlpha = Math.max(k, 0);
+                    fxCtx.fillStyle = p.color || `hsl(${p.hue + 25}, 100%, 65%)`;
+                    fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.size * (0.5 + k * 0.5), 0, Math.PI * 2); fxCtx.fill();
+                    if (p.trail) { fxCtx.globalAlpha = Math.max(k, 0) * 0.35; fxCtx.beginPath(); fxCtx.arc(p.x - p.vx * 2, p.y - p.vy * 2, p.size * 0.7, 0, Math.PI * 2); fxCtx.fill(); }
+                    fxCtx.globalAlpha = 1;
+                }
+            }
+            fxCtx.globalCompositeOperation = 'source-over';
+            requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        const palettes = {
+            gold: ['#fff4d1', '#e8c27a', '#ffd98a'], fire: ['#ffe08a', '#ff8a2a', '#ff4a1f'], water: ['#e3f6ff', '#7fd0ff', '#3aa5ea'],
+            light: ['#ffffff', '#fff3c4', '#ffe08a'], dark: ['#b6ffc9', '#3dff7a', '#1fd16b'], blood: ['#ff6b7a', '#d01a2c', '#8a0313'],
+            heal: ['#e9fff4', '#9fffd0', '#5be8a8'], shield: ['#ffffff', '#cfeaff', '#9fd8ff'], stone: ['#d9d9d9', '#a8a8a8', '#7a7a7a']
+        };
+        const spellPalette = {
+            lumos: 'light', nox: 'gold', incendio: 'fire', fiendfyre: 'fire', aguamenti: 'water', protego: 'shield', 'expecto patronum': 'shield',
+            'prior incantato': 'shield', morsmordre: 'dark', 'avada kedavra': 'dark', serpensortia: 'dark', 'slugulus eructo': 'dark', aparecium: 'dark',
+            sectumsempra: 'blood', bombarda: 'fire', expelliarmus: 'blood', 'vulnera sanentur': 'heal', reparo: 'heal', 'finite incantatem': 'heal',
+            duro: 'stone', 'petrificus totalus': 'shield', 'vipera evanesca': 'fire'
+        };
+
+        function originPoint() {
+            const r = (isTextMode ? castForm : micBtn).getBoundingClientRect();
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        }
+
+        function castBurst(spell) {
+            const pal = palettes[spellPalette[spell] || 'gold'];
+            const { x, y } = originPoint();
+            const count = reduceMotion ? 18 : 70;
+            for (let i = 0; i < count; i++) {
+                const a = Math.random() * Math.PI * 2; const sp = Math.random() * 7 + 2;
+                emit({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5, life: 0, max: Math.random() * 40 + 35, size: Math.random() * 2.6 + 1,
+                    kind: 'spark', color: pal[(Math.random() * pal.length) | 0], g: 0.06, drag: 0.955, trail: true });
+            }
+            animate(sigil, { scale: [1, 1.08, 1] }, { duration: 0.5, type: M ? 'spring' : undefined, bounce: 0.5 });
+        }
+
+        function inscribe(node) {
+            animate(node, { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'], opacity: [0.2, 1] }, { duration: 0.7, ease: [0.22, 1, 0.36, 1] });
+        }
+
+        /* ---------------- spell matching ---------------- */
         function getSimilarity(s1, s2) {
             let costs = new Array();
             for (let i = 0; i <= s1.length; i++) {
@@ -286,61 +745,147 @@
             return (lowestDistance <= 6) ? bestMatch : spokenText;
         }
 
+        /* ---------------- input modes ---------------- */
+        const idleVoice = "اضغط على الزر وانطق التعويذة"; const idleText = "اكتب التعويذة واضغط إلقاء";
+        const idleStatus = () => isTextMode ? idleText : idleVoice;
+
+        function setListening(on) { micBtn.classList.toggle('listening', on); sigil.classList.toggle('listening', on); }
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             switchToTextMode(); modeToggleBtn.style.display = 'none';
             statusText.innerText = "متصفحك لا يدعم الصوت. استخدم الكتابة لإلقاء التعاويذ.";
         } else {
             recognition = new SpeechRecognition(); recognition.lang = 'en-US'; recognition.interimResults = false;
-            micBtn.addEventListener('click', () => { patronusContainer.style.display = "none"; recognition.start(); micBtn.classList.add('listening'); statusText.innerText = "جارِ الاستماع للتعويذة..."; resultText.innerText = ""; });
+            micBtn.addEventListener('click', () => {
+                if (micBtn.classList.contains('listening')) { recognition.stop(); return; }
+                patronusContainer.style.display = "none";
+                try { recognition.start(); } catch (e) { return; }
+                setListening(true); statusText.innerText = "جارِ الاستماع للتعويذة..."; resultText.textContent = "";
+            });
             recognition.onresult = (event) => { handleSpellInput(event.results[0][0].transcript.toLowerCase()); };
-            recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('listening'); if(statusText.innerText === "جارِ الاستماع للتعويذة...") statusText.innerText = isTextMode ? "اكتب التعويذة واضغط إلقاء" : "اضغط على الزر وانطق التعويذة"; };
-            recognition.onerror = () => { micBtn.classList.remove('listening'); statusText.innerText = "لم أتمكن من السماع، حاول مجدداً."; };
+            recognition.onspeechend = () => { recognition.stop(); };
+            recognition.onend = () => { setListening(false); if (statusText.innerText === "جارِ الاستماع للتعويذة...") statusText.innerText = idleStatus(); };
+            recognition.onerror = () => { setListening(false); statusText.innerText = "لم أتمكن من السماع، حاول مجدداً."; };
         }
 
-        function switchToTextMode() { isTextMode = true; micBtn.style.display = 'none'; textInputContainer.style.display = 'block'; modeToggleBtn.innerText = '🎙️ صوت'; statusText.innerText = "اكتب التعويذة واضغط إلقاء"; spellInput.focus(); if (recognition && micBtn.classList.contains('listening')) recognition.stop(); }
-        function switchToVoiceMode() { isTextMode = false; micBtn.style.display = 'flex'; textInputContainer.style.display = 'none'; modeToggleBtn.innerText = '⌨️ كتابة'; statusText.innerText = "اضغط على الزر وانطق التعويذة"; spellInput.value = ""; }
+        function setToggleLabel(text) { modeToggleBtn.querySelector('span').textContent = text; }
+        function switchToTextMode() {
+            isTextMode = true; sigil.style.display = 'none'; textInputContainer.style.display = 'block'; setToggleLabel('صوت');
+            statusText.innerText = idleText; animate(textInputContainer, { opacity: [0, 1], y: [10, 0] }, { duration: 0.35 });
+            spellInput.focus(); if (recognition && micBtn.classList.contains('listening')) recognition.stop();
+        }
+        function switchToVoiceMode() {
+            isTextMode = false; sigil.style.display = 'grid'; textInputContainer.style.display = 'none'; setToggleLabel('كتابة');
+            statusText.innerText = idleVoice; spellInput.value = "";
+            animate(sigil, { opacity: [0, 1], scale: [0.85, 1] }, { duration: 0.5, type: M ? 'spring' : undefined, bounce: 0.35 });
+        }
         modeToggleBtn.addEventListener('click', () => { if (isTextMode) switchToVoiceMode(); else switchToTextMode(); });
 
         function handleSpellInput(rawText) {
-            rawText = rawText.trim().toLowerCase(); if(!rawText) return;
+            rawText = rawText.trim().toLowerCase(); if (!rawText) return;
             const correctedSpell = findClosestSpell(rawText);
-            if (rawText !== correctedSpell && validSpells.includes(correctedSpell)) { resultText.innerHTML = `<span style="color:#888; font-size:0.6em; text-decoration:line-through;">${rawText}</span> <br> ✨ ${correctedSpell}`; } else resultText.innerText = rawText;
+            resultText.textContent = '';
+            const line = document.createElement('span');
+            if (rawText !== correctedSpell && validSpells.includes(correctedSpell)) {
+                const heard = document.createElement('span'); heard.className = 'heard'; heard.textContent = rawText;
+                resultText.appendChild(heard); line.textContent = correctedSpell;
+            } else line.textContent = rawText;
+            line.style.display = 'inline-block'; resultText.appendChild(line); inscribe(line);
+            if (validSpells.includes(correctedSpell)) castBurst(correctedSpell);
             executeSpell(correctedSpell);
         }
 
-        castBtn.addEventListener('click', () => { handleSpellInput(spellInput.value); spellInput.value = ""; });
-        spellInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSpellInput(spellInput.value); spellInput.value = ""; } });
+        castForm.addEventListener('submit', (e) => { e.preventDefault(); handleSpellInput(spellInput.value); spellInput.value = ""; });
 
-        function startFire() {
-            if (isFireActive) return; isFireActive = true; body.classList.add('incendio-active');
-            const container = document.getElementById('fire-container');
-            fireInterval = setInterval(() => {
-                const flame = document.createElement('div'); flame.classList.add('flame-particle');
-                const size = Math.random() * 80 + 40; const left = Math.random() * 100; const duration = Math.random() * 2 + 1.5; const sway = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 100); 
-                const colors = [ "radial-gradient(circle, rgba(255,200,0,1) 0%, rgba(255,80,0,0.8) 40%, rgba(255,0,0,0) 70%)", "radial-gradient(circle, rgba(255,140,0,1) 0%, rgba(200,20,0,0.8) 50%, rgba(255,0,0,0) 70%)" ];
-                flame.style.width = `${size}px`; flame.style.height = `${size}px`; flame.style.left = `${left}%`; flame.style.animationDuration = `${duration}s`; flame.style.setProperty('--sway', `${sway}px`); flame.style.background = colors[Math.floor(Math.random() * colors.length)];
-                container.appendChild(flame); setTimeout(() => { flame.remove(); }, duration * 1000);
-            }, 60); 
+        /* ---------------- spell book ---------------- */
+        const grimoire = document.getElementById('grimoire'); const scrim = document.getElementById('book-scrim');
+        const bookBtn = document.getElementById('book-btn'); const bookBody = document.getElementById('book-body');
+        for (const group of spellBook) {
+            const g = document.createElement('section'); g.className = 'book-group';
+            const h = document.createElement('h3'); h.textContent = group.title; g.appendChild(h);
+            for (const [name, what] of group.spells) {
+                const b = document.createElement('button'); b.type = 'button'; b.className = 'spell-row' + (hostileSpells.includes(name) || name === 'avada kedavra' ? ' hostile' : '');
+                const n = document.createElement('span'); n.className = 'name'; n.textContent = name;
+                const w = document.createElement('span'); w.className = 'what'; w.textContent = what;
+                b.append(n, w);
+                b.addEventListener('click', () => { closeBook(); setTimeout(() => handleSpellInput(name), 260); });
+                g.appendChild(b);
+            }
+            bookBody.appendChild(g);
         }
+        function openBook() {
+            grimoire.classList.add('open'); scrim.classList.add('open'); grimoire.setAttribute('aria-hidden', 'false'); bookBtn.setAttribute('aria-expanded', 'true');
+            const rows = bookBody.querySelectorAll('.book-group');
+            if (M && M.stagger) animate(rows, { opacity: [0, 1], x: [-14, 0] }, { duration: 0.35, delay: M.stagger(0.04, { startDelay: 0.12 }) });
+            setTimeout(() => document.getElementById('book-close').focus(), 50);
+        }
+        function closeBook() {
+            if (!grimoire.classList.contains('open')) return;
+            grimoire.classList.remove('open'); scrim.classList.remove('open'); grimoire.setAttribute('aria-hidden', 'true'); bookBtn.setAttribute('aria-expanded', 'false');
+            bookBtn.focus();
+        }
+        bookBtn.addEventListener('click', openBook);
+        scrim.addEventListener('click', closeBook);
+        document.getElementById('book-close').addEventListener('click', closeBook);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBook(); });
 
-        function stopFire() { if (!isFireActive) return; isFireActive = false; clearInterval(fireInterval); body.classList.remove('incendio-active'); }
+        /* ---------------- effects ---------------- */
+        function startFire(hot = false) { isFireActive = true; fireRate = hot ? 9 : 5; fireHeat = hot ? 1.45 : 1; body.classList.add('incendio-active'); }
+        function stopFire() { if (!isFireActive) return; isFireActive = false; fireRate = 0; body.classList.remove('incendio-active'); }
 
         function throwDisarmedWand() {
-            const wand = document.createElement('div'); wand.innerText = '🪄'; wand.className = 'disarmed-wand';
+            const wand = document.createElement('div'); wand.innerHTML = art('wand'); wand.className = 'disarmed-wand';
             const edge = Math.floor(Math.random() * 4); let startX, startY, endX, endY;
-            if (edge === 0) { startX = Math.random() * window.innerWidth; startY = -200; endX = Math.random() * window.innerWidth; endY = window.innerHeight + 200; } 
-            else if (edge === 1) { startX = window.innerWidth + 200; startY = Math.random() * window.innerHeight; endX = -200; endY = Math.random() * window.innerHeight; } 
-            else if (edge === 2) { startX = Math.random() * window.innerWidth; startY = window.innerHeight + 200; endX = Math.random() * window.innerWidth; endY = -200; } 
+            if (edge === 0) { startX = Math.random() * window.innerWidth; startY = -200; endX = Math.random() * window.innerWidth; endY = window.innerHeight + 200; }
+            else if (edge === 1) { startX = window.innerWidth + 200; startY = Math.random() * window.innerHeight; endX = -200; endY = Math.random() * window.innerHeight; }
+            else if (edge === 2) { startX = Math.random() * window.innerWidth; startY = window.innerHeight + 200; endX = Math.random() * window.innerWidth; endY = -200; }
             else { startX = -200; startY = Math.random() * window.innerHeight; endX = window.innerWidth + 200; endY = Math.random() * window.innerHeight; }
             wand.style.left = `${startX}px`; wand.style.top = `${startY}px`;
             const startRot = Math.random() * 360; wand.style.transform = `rotate(${startRot}deg)`; document.body.appendChild(wand);
-            void wand.offsetWidth; wand.style.left = `${endX}px`; wand.style.top = `${endY}px`; wand.style.transform = `rotate(${startRot + 720}deg)`; 
+            void wand.offsetWidth; wand.style.left = `${endX}px`; wand.style.top = `${endY}px`; wand.style.transform = `rotate(${startRot + 720}deg)`;
             setTimeout(() => wand.remove(), 1000);
         }
 
+        function shockwave() {
+            const { x, y } = originPoint(); const s = document.createElement('div'); s.className = 'shockwave';
+            s.style.left = x + 'px'; s.style.top = y + 'px'; document.body.appendChild(s); setTimeout(() => s.remove(), 750);
+            for (let i = 0; i < (reduceMotion ? 20 : 120); i++) {
+                const a = Math.random() * Math.PI * 2; const sp = Math.random() * 14 + 4;
+                emit({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: Math.random() * 30 + 25, size: Math.random() * 3 + 1.2, kind: 'spark', color: palettes.fire[(Math.random() * 3) | 0], g: 0.12, drag: 0.94, trail: true });
+            }
+        }
+
+        function crackGlass() {
+            const c = document.getElementById('glass-crack-container');
+            c.classList.remove('cracking'); c.style.display = 'block'; void c.offsetWidth; c.classList.add('cracking');
+        }
+
+        function slashMarks(container) {
+            for (let i = 0; i < 4; i++) {
+                const s = document.createElement('div'); s.className = 'slash-mark';
+                const w = Math.random() * 30 + 30; s.style.width = w + 'vw'; s.style.left = (Math.random() * (100 - w)) + 'vw'; s.style.top = (Math.random() * 70 + 12) + 'vh';
+                s.style.transform = `rotate(${Math.random() * 40 - 20}deg)`; s.style.animationDelay = (i * 0.12) + 's';
+                container.appendChild(s);
+            }
+        }
+
+        function shieldBurst() {
+            const r = 70;
+            for (let i = 0; i < (reduceMotion ? 12 : 60); i++) {
+                const a = Math.random() * Math.PI * 2; const { x, y } = originPoint();
+                emit({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, life: 0, max: 40, size: 2, kind: 'spark', color: palettes.shield[(Math.random() * 3) | 0], g: 0, drag: 0.97 });
+            }
+        }
+
+        function patronusWisps() {
+            for (let i = 0; i < (reduceMotion ? 10 : 80); i++) {
+                emit({ x: W / 2 + (Math.random() - 0.5) * 240, y: H * 0.75 + Math.random() * 60, vx: (Math.random() - 0.5) * 1.2, vy: -(Math.random() * 2 + 0.8), life: 0, max: Math.random() * 80 + 60, size: Math.random() * 2.4 + 0.8, kind: 'spark', color: palettes.shield[(Math.random() * 3) | 0], g: -0.005, drag: 0.99, wob: Math.random() * 6 });
+            }
+        }
+
         async function executeSpell(spell) {
-            
+
             if (spell !== "prior incantato" && validSpells.includes(spell)) {
                 spellHistory.unshift(spell);
                 if (spellHistory.length > 3) spellHistory.pop();
@@ -348,44 +893,49 @@
 
             if (isProtegoActive && hostileSpells.includes(spell)) {
                 statusText.innerText = `🛡️ Protego! (تم صد ${spell})`;
-                protegoShield.classList.add('shield-ripple');
+                protegoShield.classList.add('shield-ripple'); shieldBurst();
                 setTimeout(() => protegoShield.classList.remove('shield-ripple'), 300);
-                return; 
+                return;
             }
 
             if (spell === "lumos") {
                 statusText.innerText = "✨ جارِ تشغيل النور...";
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); cameraTrack = stream.getVideoTracks()[0];
-                    if (cameraTrack.getCapabilities().torch) { await cameraTrack.applyConstraints({ advanced: [{ torch: true }] }); statusText.innerText = "✨ Lumos Maxima!"; } 
+                    if (cameraTrack.getCapabilities().torch) { await cameraTrack.applyConstraints({ advanced: [{ torch: true }] }); statusText.innerText = "✨ Lumos Maxima!"; }
                     else throw new Error();
-                } catch (e) { body.classList.add('lumos-active'); statusText.innerText = "✨ Lumos! (كشاف الشاشة)"; }
-            } 
+                } catch (e) {
+                    if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
+                    body.classList.add('lumos-active'); statusText.innerText = "✨ Lumos! (كشاف الشاشة)";
+                    const bloom = document.getElementById('lumos-bloom'); const { x, y } = originPoint();
+                    bloom.style.background = `radial-gradient(circle at ${x}px ${y}px, #ffffff 0%, #fff7dc 30%, #ffe9b0 65%, #f5d88f 100%)`;
+                }
+            }
             else if (spell === "nox") { if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; } body.classList.remove('lumos-active'); statusText.innerText = "🌑 Nox!"; }
-            else if (spell === "incendio") { statusText.innerText = "🔥 Incendio!"; startFire(); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); if(statusText.innerText.includes("Incendio")) statusText.innerText = "✨ انطفأت النار!"; }, 8000); }
-            else if (spell === "fiendfyre") { statusText.innerText = "🐉 Fiendfyre!"; startFire(); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if(statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
+            else if (spell === "incendio") { statusText.innerText = "🔥 Incendio!"; startFire(false); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); if (statusText.innerText.includes("Incendio")) statusText.innerText = "✨ انطفأت النار!"; }, 8000); }
+            else if (spell === "fiendfyre") { statusText.innerText = "🐉 Fiendfyre!"; startFire(true); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if (statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
             else if (spell === "aguamenti") {
                 const water = document.getElementById('water-container'); water.style.opacity = "1"; body.classList.add('aguamenti-active');
-                if (isFireActive || body.classList.contains('fiendfyre-active')) { stopFire(); body.classList.remove('fiendfyre-active'); clearTimeout(fireTimeout); statusText.innerText = "💧 Aguamenti! (تطفئ النيران)"; } 
+                if (isFireActive || body.classList.contains('fiendfyre-active')) { stopFire(); body.classList.remove('fiendfyre-active'); clearTimeout(fireTimeout); statusText.innerText = "💧 Aguamenti! (تطفئ النيران)"; }
                 else statusText.innerText = "💧 Aguamenti! (تملأ المكان)";
-                setTimeout(() => { body.classList.remove('aguamenti-active'); statusText.innerText = "✨ انحسرت المياه!"; setTimeout(() => water.style.opacity = "0", 2000); }, 5000); 
+                setTimeout(() => { body.classList.remove('aguamenti-active'); statusText.innerText = "✨ انحسرت المياه!"; setTimeout(() => water.style.opacity = "0", 2000); }, 5000);
             }
-            else if (spell === "confundo") { statusText.innerText = "🌀 Confundo!"; body.classList.add('confundo-active'); clearTimeout(confundoTimeout); confundoTimeout = setTimeout(() => { body.classList.remove('confundo-active'); if(statusText.innerText.includes("Confundo")) statusText.innerText = "✨ زال تأثير التشوش!"; }, 8000); }
-            else if (spell === "wingardium leviosa") { statusText.innerText = "🪶 Wingardium Leviosa!"; body.classList.add('leviosa-active'); clearTimeout(leviosaTimeout); leviosaTimeout = setTimeout(() => { body.classList.remove('leviosa-active'); if(statusText.innerText.includes("Leviosa")) statusText.innerText = "✨ انتهى التحليق!"; }, 10000); }
-            else if (spell === "bombarda") { statusText.innerText = "💥 Bombarda!"; document.getElementById('glass-crack-container').style.display = 'block'; body.classList.add('shake-intense'); setTimeout(() => body.classList.remove('shake-intense'), 400); }
+            else if (spell === "confundo") { statusText.innerText = "🌀 Confundo!"; body.classList.add('confundo-active'); clearTimeout(confundoTimeout); confundoTimeout = setTimeout(() => { body.classList.remove('confundo-active'); if (statusText.innerText.includes("Confundo")) statusText.innerText = "✨ زال تأثير التشوش!"; }, 8000); }
+            else if (spell === "wingardium leviosa") { statusText.innerText = "🪶 Wingardium Leviosa!"; body.classList.add('leviosa-active'); clearTimeout(leviosaTimeout); leviosaTimeout = setTimeout(() => { body.classList.remove('leviosa-active'); if (statusText.innerText.includes("Leviosa")) statusText.innerText = "✨ انتهى التحليق!"; }, 10000); }
+            else if (spell === "bombarda") { statusText.innerText = "💥 Bombarda!"; shockwave(); crackGlass(); body.classList.add('shake-intense'); setTimeout(() => body.classList.remove('shake-intense'), 450); }
             else if (spell === "reparo") {
                 statusText.innerText = "✨ Reparo! (تم إصلاح كل شيء)";
-                document.getElementById('glass-crack-container').style.display = 'none'; document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = ''; 
+                document.getElementById('glass-crack-container').style.display = 'none'; document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = '';
                 mainContent.classList.remove('descendo-active', 'diffindo-active'); body.classList.add('reparo-active'); setTimeout(() => body.classList.remove('reparo-active'), 1000);
             }
             else if (spell === "engorgio") {
-                if (mainContent.classList.contains('text-small')) { mainContent.classList.remove('text-small'); statusText.innerText = "🔍 Engorgio! (عاد الحجم)"; } 
-                else if (!mainContent.classList.contains('text-large')) { mainContent.classList.add('text-large'); statusText.innerText = "🔍 Engorgio! (تكبير)"; } 
+                if (mainContent.classList.contains('text-small')) { mainContent.classList.remove('text-small'); statusText.innerText = "🔍 Engorgio! (عاد الحجم)"; }
+                else if (!mainContent.classList.contains('text-large')) { mainContent.classList.add('text-large'); statusText.innerText = "🔍 Engorgio! (تكبير)"; }
                 else statusText.innerText = "🔍 Engorgio! (أقصى حجم)";
             }
             else if (spell === "reducio") {
-                if (mainContent.classList.contains('text-large')) { mainContent.classList.remove('text-large'); statusText.innerText = "🔎 Reducio! (عاد الحجم)"; } 
-                else if (!mainContent.classList.contains('text-small')) { mainContent.classList.add('text-small'); statusText.innerText = "🔎 Reducio! (تصغير)"; } 
+                if (mainContent.classList.contains('text-large')) { mainContent.classList.remove('text-large'); statusText.innerText = "🔎 Reducio! (عاد الحجم)"; }
+                else if (!mainContent.classList.contains('text-small')) { mainContent.classList.add('text-small'); statusText.innerText = "🔎 Reducio! (تصغير)"; }
                 else statusText.innerText = "🔎 Reducio! (أصغر حجم)";
             }
             else if (spell === "serpensortia") { statusText.innerText = "🐍 Serpensortia!"; const snake = document.getElementById('snake-container'); snake.classList.remove('vipera-evanesca-anim'); body.classList.add('serpensortia-active'); }
@@ -394,46 +944,41 @@
             }
             else if (spell === "avis") {
                 statusText.innerText = "🐦 Avis!";
-                for(let i = 0; i < 15; i++) { setTimeout(() => { const bird = document.createElement('div'); bird.innerText = Math.random() > 0.5 ? "🕊️" : "🐦"; bird.className = "bird-particle"; bird.style.top = (Math.random() * 80 + 5) + "%"; bird.style.animationDuration = (Math.random() * 2 + 3) + "s"; document.body.appendChild(bird); setTimeout(() => bird.remove(), 5000); }, i * 200); }
+                for (let i = 0; i < 15; i++) { setTimeout(() => { const bird = document.createElement('div'); bird.innerHTML = art(Math.random() > 0.5 ? 'dove' : 'bird'); bird.className = "bird-particle"; bird.style.top = (Math.random() * 80 + 5) + "%"; bird.style.fontSize = (Math.random() * 2 + 2) + "rem"; bird.style.animationDuration = (Math.random() * 2 + 3) + "s"; document.body.appendChild(bird); setTimeout(() => bird.remove(), 5000); }, i * 200); }
             }
             else if (spell === "descendo") { statusText.innerText = "⬇️ Descendo!"; mainContent.classList.add('descendo-active'); }
             else if (spell === "diffindo") { statusText.innerText = "✂️ Diffindo!"; mainContent.classList.add('diffindo-active'); const slash = document.createElement('div'); slash.className = "diffindo-slash"; document.body.appendChild(slash); setTimeout(() => slash.remove(), 500); }
             else if (spell === "duro") { statusText.innerText = "🗿 Duro!"; body.classList.add('duro-active'); }
-            else if (spell === "finite incantatem") { if(body.classList.contains('duro-active')) { statusText.innerText = "✨ Finite Incantatem!"; body.classList.remove('duro-active'); } else statusText.innerText = "✨ لم أجد سحراً لإبطاله!"; }
+            else if (spell === "finite incantatem") { if (body.classList.contains('duro-active')) { statusText.innerText = "✨ Finite Incantatem!"; body.classList.remove('duro-active'); } else statusText.innerText = "✨ لم أجد سحراً لإبطاله!"; }
             else if (spell === "expelliarmus") { statusText.innerText = "💥 Expelliarmus!"; throwDisarmedWand(); }
             else if (spell === "sectumsempra") {
                 statusText.innerText = "🩸 Sectumsempra!"; const bloodCont = document.getElementById('blood-container'); bloodCont.classList.remove('healing'); bloodCont.innerHTML = '';
-                for(let i=0; i<40; i++) { let drop = document.createElement('div'); drop.className = 'blood-drop'; drop.style.left = (Math.random() * 100) + 'vw'; drop.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's'; drop.style.animationDelay = (Math.random() * 2) + 's'; bloodCont.appendChild(drop); }
+                slashMarks(bloodCont);
+                for (let i = 0; i < 40; i++) { let drop = document.createElement('div'); drop.className = 'blood-drop'; drop.style.left = (Math.random() * 100) + 'vw'; drop.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's'; drop.style.animationDelay = (Math.random() * 2) + 's'; bloodCont.appendChild(drop); }
             }
             else if (spell === "vulnera sanentur") {
                 statusText.innerText = "✨ Vulnera Sanentur!"; const bloodCont = document.getElementById('blood-container');
                 if (bloodCont.children.length > 0) { bloodCont.classList.add('healing'); setTimeout(() => { bloodCont.innerHTML = ''; bloodCont.classList.remove('healing'); }, 1500); } else statusText.innerText = "✨ لم أجد جروحاً!";
             }
             else if (spell === "riddikulus") { statusText.innerText = "🤡 Riddikulus!"; const clown = document.getElementById('clown-container'); clown.classList.add('show'); setTimeout(() => clown.classList.remove('show'), 3500); }
-            else if (spell === "alohomora") { statusText.innerText = "🔓 Alohomora!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.innerText = "🔒"; lockIcon.className = ""; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-unlock"; lockIcon.innerText = "🔓"; }, 600); }
-            else if (spell === "colloportus") { statusText.innerText = "🔒 Colloportus!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.innerText = "🔓"; lockIcon.className = ""; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-lock"; lockIcon.innerText = "🔒"; }, 600); }
+            else if (spell === "alohomora") { statusText.innerText = "🔓 Alohomora!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.className = ""; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-unlock is-open"; }, 600); }
+            else if (spell === "colloportus") { statusText.innerText = "🔒 Colloportus!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.className = "is-open"; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-lock"; }, 600); }
             else if (spell === "slugulus eructo") {
                 statusText.innerText = "🐌 Slugulus Eructo!"; const slugCont = document.getElementById('slug-container');
-                for(let i=0; i<15; i++) { setTimeout(() => { let slug = document.createElement('div'); slug.innerText = '🐌'; slug.className = 'slug-particle'; slug.style.left = (Math.random() * 90 + 5) + 'vw'; slug.style.fontSize = (Math.random() * 3 + 2) + 'rem'; slug.style.animationDuration = (Math.random() * 3 + 4) + 's'; slugCont.appendChild(slug); setTimeout(() => slug.remove(), 7000); }, i * 300); }
+                for (let i = 0; i < 15; i++) { setTimeout(() => { let slug = document.createElement('div'); slug.innerHTML = art('snail'); slug.className = 'slug-particle'; slug.style.left = (Math.random() * 90 + 5) + 'vw'; slug.style.fontSize = (Math.random() * 3 + 2) + 'rem'; slug.style.animationDuration = (Math.random() * 3 + 4) + 's'; slugCont.appendChild(slug); setTimeout(() => slug.remove(), 7000); }, i * 300); }
             }
-            
-            // --- Aparecium بتعديل الإخفاء الدرامي --- //
             else if (spell === "aparecium") {
                 clearTimeout(apareciumTimeout);
                 statusText.innerText = "🔍 Aparecium! (كشف الخبايا)";
                 body.classList.add('aparecium-active');
-                
                 apareciumTimeout = setTimeout(() => {
                     body.classList.remove('aparecium-active');
-                    if(statusText.innerText.includes("Aparecium")) {
-                        statusText.innerText = isTextMode ? "اكتب التعويذة واضغط إلقاء" : "اضغط على الزر وانطق التعويذة";
-                    }
+                    if (statusText.innerText.includes("Aparecium")) statusText.innerText = idleStatus();
                 }, 15000);
             }
-
             else if (spell === "homenum revelio") {
                 statusText.innerText = "👣 Homenum Revelio! (كشف التواجد)";
-                for(let i=0; i<6; i++) { setTimeout(() => { let step = document.createElement('div'); step.innerText = '👣'; step.className = 'footstep'; step.style.left = (15 + i * 12) + 'vw'; step.style.top = (Math.random() * 40 + 30) + 'vh'; document.body.appendChild(step); setTimeout(() => step.remove(), 3000); }, i * 800); }
+                for (let i = 0; i < 6; i++) { setTimeout(() => { let step = document.createElement('div'); step.innerHTML = art('footprints'); step.className = 'footstep'; step.style.left = (12 + i * 13) + 'vw'; step.style.top = (52 + (i % 2 ? -7 : 7)) + 'vh'; step.style.rotate = '90deg'; document.body.appendChild(step); setTimeout(() => step.remove(), 3000); }, i * 800); }
             }
             else if (spell === "sonorus") { statusText.innerText = "🔊 Sonorus! (تشغيل الموسيقى)"; let bgMusic = document.getElementById('hp-music'); bgMusic.play().catch(e => { statusText.innerText = "عذراً! الرجاء إضافة ملف hp-theme.mp3 بجانب الكود"; }); }
             else if (spell === "quietus") { statusText.innerText = "🔇 Quietus! (إيقاف الموسيقى)"; document.getElementById('hp-music').pause(); }
@@ -445,33 +990,57 @@
             }
             else if (spell === "morsmordre") { statusText.innerText = "💀 Morsmordre!"; body.classList.add('morsmordre-active'); }
             else if (spell === "protego") {
-                statusText.innerText = "🛡️ Protego! (درع الحماية مفعل)"; isProtegoActive = true; body.classList.add('protego-active');
-                setTimeout(() => { isProtegoActive = false; body.classList.remove('protego-active'); if(statusText.innerText.includes("Protego")) statusText.innerText = "✨ تلاشى الدرع السحري!"; }, 15000); 
+                statusText.innerText = "🛡️ Protego! (درع الحماية مفعل)"; isProtegoActive = true; body.classList.add('protego-active'); shieldBurst();
+                clearTimeout(protegoTimeout);
+                protegoTimeout = setTimeout(() => { isProtegoActive = false; body.classList.remove('protego-active'); if (statusText.innerText.includes("Protego")) statusText.innerText = "✨ تلاشى الدرع السحري!"; }, 15000);
             }
-
             else if (spell === "obliviate") {
                 statusText.innerText = "🌫️ Obliviate! (مسح وإعادة ضبط)"; body.classList.add('obliviate-active');
                 setTimeout(() => {
                     if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
-                    document.getElementById('hp-music').pause(); 
-                    stopFire(); body.className = ''; mainContent.className = 'levitate-target'; 
-                    document.getElementById('glass-crack-container').style.display = 'none'; 
+                    document.getElementById('hp-music').pause();
+                    stopFire(); particles.length = 0; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
+                    document.getElementById('glass-crack-container').style.display = 'none';
                     document.getElementById('snake-container').classList.remove('vipera-evanesca-anim');
-                    document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = ''; 
-                    document.getElementById('clown-container').classList.remove('show'); document.getElementById('lock-container').classList.remove('show-lock'); 
-                    patronusContainer.style.display = "none"; resultText.innerText = ""; 
-                    isProtegoActive = false; spellHistory = []; clearTimeout(apareciumTimeout);
-                    statusText.innerText = isTextMode ? "اكتب التعويذة واضغط إلقاء" : "اضغط على الزر وانطق التعويذة";
-                }, 1500); 
+                    document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = '';
+                    document.getElementById('clown-container').classList.remove('show'); document.getElementById('lock-container').classList.remove('show-lock');
+                    patronusContainer.style.display = "none"; resultText.textContent = "";
+                    isProtegoActive = false; spellHistory = []; clearTimeout(apareciumTimeout); clearTimeout(protegoTimeout); clearTimeout(fireTimeout);
+                    statusText.innerText = idleStatus();
+                }, 1500);
                 setTimeout(() => body.classList.remove('obliviate-active'), 3000);
             }
-            else if (spell === "expecto patronum") { statusText.innerText = "🦌 جارِ استدعاء الباتروناس..."; patronusContainer.style.display = "block"; document.getElementById('patronus-input').focus(); }
-            else if (spell === "petrificus totalus") { statusText.innerText = "❄️ Petrificus Totalus!"; body.classList.add('frozen'); setTimeout(() => { body.classList.remove('frozen'); if(statusText.innerText.includes("Petrificus")) { statusText.innerText = "✨ تم فك التعويذة!"; resultText.innerText = ""; } }, 10000); }
-            else if (spell === "avada kedavra") { statusText.innerText = "☠️ تعويذة محظورة!"; setTimeout(() => { body.innerHTML = "<h1 style='color:#ae0001; font-size:4em; margin-top:20vh;'>GAME OVER</h1>"; }, 1500); }
+            else if (spell === "expecto patronum") {
+                statusText.innerText = "🦌 جارِ استدعاء الباتروناس..."; patronusContainer.style.display = "block"; patronusWisps();
+                animate(patronusContainer, { opacity: [0, 1], y: [16, 0], scale: [0.96, 1] }, { duration: 0.6, type: M ? 'spring' : undefined, bounce: 0.3 });
+                document.getElementById('patronus-input').focus();
+            }
+            else if (spell === "petrificus totalus") { statusText.innerText = "❄️ Petrificus Totalus!"; body.classList.add('frozen'); setTimeout(() => { body.classList.remove('frozen'); if (statusText.innerText.includes("Petrificus")) { statusText.innerText = "✨ تم فك التعويذة!"; resultText.textContent = ""; } }, 10000); }
+            else if (spell === "avada kedavra") {
+                statusText.innerText = "☠️ تعويذة محظورة!";
+                const flash = document.getElementById('kill-flash');
+                setTimeout(() => {
+                    animate(flash, { opacity: [0, 1, 0] }, { duration: 0.9 });
+                    setTimeout(() => {
+                        const go = document.getElementById('game-over'); go.classList.add('show');
+                        if (recognition) try { recognition.abort(); } catch (e) {}
+                        stopFire(); document.getElementById('hp-music').pause();
+                        animate(go.querySelector('h2'), { opacity: [0, 1], scale: [1.3, 1], filter: ['blur(12px)', 'blur(0px)'] }, { duration: 1.2 });
+                        go.querySelector('button').focus();
+                    }, 350);
+                }, 1200);
+            }
             else statusText.innerText = "تعويذة غير معروفة.";
         }
 
         function callPatronus() { const phoneNumber = document.getElementById('patronus-input').value.trim(); if (phoneNumber !== "") window.location.href = `tel:${phoneNumber}`; else alert("يرجى كتابة رقم الهاتف أولاً!"); }
+
+        /* ---------------- entrance ---------------- */
+        if (!reduceMotion) {
+            animate(document.querySelector('h1'), { opacity: [0, 1], filter: ['blur(10px)', 'blur(0px)'], y: [14, 0] }, { duration: 0.9 });
+            animate(statusText, { opacity: [0, 1] }, { duration: 0.6, delay: 0.35 });
+            animate(sigil, { opacity: [0, 1], scale: [0.7, 1], rotate: [-25, 0] }, { duration: 1.1, delay: 0.2, type: M ? 'spring' : undefined, bounce: 0.25 });
+        }
     </script>
 </body>
 </html>
