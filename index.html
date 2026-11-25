@@ -129,13 +129,13 @@
             transition: transform 0.25s var(--ease-spring), box-shadow 0.35s ease, background 0.4s ease, color 0.3s ease;
         }
         #mic-btn svg { width: 42px; height: 42px; }
-        #mic-btn:hover { transform: scale(1.05); box-shadow: 0 0 0 1px rgba(255, 240, 200, 0.45) inset, 0 -8px 18px rgba(60, 40, 10, 0.45) inset, 0 12px 34px rgba(0, 0, 0, 0.5), 0 0 70px rgba(232, 194, 122, 0.55); }
-        #mic-btn:active { transform: scale(0.95); }
+        #mic-btn:hover { --sc: 1.05; box-shadow: 0 0 0 1px rgba(255, 240, 200, 0.45) inset, 0 -8px 18px rgba(60, 40, 10, 0.45) inset, 0 12px 34px rgba(0, 0, 0, 0.5), 0 0 70px rgba(232, 194, 122, 0.55); }
+        #mic-btn:active { --sc: 0.95; }
         #mic-btn.listening {
             color: #fff1ea;
             background: radial-gradient(circle at 35% 30%, #ff9b8f 0%, #d8344a 38%, var(--crimson) 75%, #4a0712 100%);
             box-shadow: 0 0 0 1px rgba(255, 200, 190, 0.35) inset, 0 -8px 18px rgba(40, 0, 6, 0.5) inset, 0 0 60px rgba(216, 52, 74, 0.6);
-            animation: breathe 1.4s ease-in-out infinite;
+            animation: liquid 1.8s ease-in-out infinite;
         }
         @keyframes breathe { 50% { transform: scale(1.06); } }
 
@@ -474,6 +474,52 @@
         .bird-particle .art { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35)); }
         .slug-particle .art { filter: drop-shadow(0 5px 10px rgba(100, 255, 100, 0.5)); }
 
+        /* ---------- self-drawing title + ring ---------- */
+        h1 { line-height: 0; }
+        .title-svg { display: block; width: min(88vw, 520px); height: auto; overflow: visible; filter: drop-shadow(0 2px 18px rgba(232, 194, 122, 0.28)); }
+        .title-svg text { font-family: var(--display); font-weight: 700; font-size: 78px; fill: url(#ink-gold); stroke: #f3d89a; stroke-width: 0.9; stroke-dasharray: 1600; stroke-dashoffset: 0; }
+        .title-svg.writing text { animation: ink-write 2.4s cubic-bezier(0.55, 0.1, 0.3, 1) both; }
+        @keyframes ink-write { 0% { stroke-dashoffset: 1600; fill-opacity: 0; } 65% { fill-opacity: 0; } 100% { stroke-dashoffset: 0; fill-opacity: 1; } }
+        .ring .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+        .sigil.drawing .ring .draw { animation: ring-draw 1.6s cubic-bezier(0.6, 0, 0.3, 1) both; }
+        .sigil.drawing .ring .draw:nth-of-type(2) { animation-delay: 0.25s; }
+        .sigil.drawing .ring text { animation: fade-in 1s ease 1.1s both; }
+        @keyframes ring-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ---------- liquid-gold orb ---------- */
+        #mic-btn { transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--sc, 1)); overflow: hidden; isolation: isolate; }
+        #mic-btn::before { content: ''; position: absolute; inset: -20%; z-index: -1; border-radius: 50%; mix-blend-mode: soft-light;
+            background: conic-gradient(from 0deg, rgba(255, 255, 255, 0) 0deg, rgba(255, 250, 230, 0.75) 40deg, rgba(255, 255, 255, 0) 95deg, rgba(120, 80, 20, 0.35) 180deg, rgba(255, 255, 255, 0) 250deg, rgba(255, 246, 220, 0.55) 300deg, rgba(255, 255, 255, 0) 360deg);
+            animation: turn 7s linear infinite; }
+        #mic-btn svg { position: relative; z-index: 1; }
+        @keyframes liquid {
+            0%, 100% { border-radius: 50%; transform: perspective(500px) scale(1); }
+            25% { border-radius: 46% 54% 52% 48% / 55% 45% 55% 45%; transform: perspective(500px) scale(1.05); }
+            50% { border-radius: 53% 47% 45% 55% / 47% 55% 45% 53%; transform: perspective(500px) scale(1.07); }
+            75% { border-radius: 48% 52% 55% 45% / 52% 48% 52% 48%; transform: perspective(500px) scale(1.03); }
+        }
+
+        /* ---------- spell book as a page turning ---------- */
+        #grimoire { transform-origin: left center; transform: perspective(1400px) rotateY(-96deg); opacity: 0;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0, rgba(0, 0, 0, 0) 14px), linear-gradient(180deg, #1c2346 0%, #11162d 100%);
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, visibility 0s linear 0.6s; }
+        #grimoire.open { transform: perspective(1400px) rotateY(0deg); opacity: 1; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease, visibility 0s; }
+
+        /* ---------- hover micro-interactions ---------- */
+        .spell-row .name { background: linear-gradient(90deg, var(--gold), var(--gold)) no-repeat left bottom / 0% 1px; transition: background-size 0.35s var(--ease-out); }
+        .spell-row:hover .name, .spell-row:focus-visible .name { background-size: 100% 1px; }
+        .chip svg { transition: transform 0.35s var(--ease-spring); }
+        .chip:hover svg { transform: translateY(-1px) rotate(-8deg) scale(1.08); }
+        #sound-btn:hover .ic-on path:last-child { animation: waves 0.8s ease-in-out infinite; }
+        @keyframes waves { 50% { opacity: 0.35; } }
+        #spell-result > span:last-child { text-shadow: none; }
+        #spell-result.glow { animation: neon 1.2s ease-out; }
+        @keyframes neon { 0% { filter: drop-shadow(0 0 0 rgba(232, 194, 122, 0)); } 30% { filter: drop-shadow(0 0 28px rgba(255, 225, 150, 0.95)); } 100% { filter: drop-shadow(0 0 22px rgba(232, 194, 122, 0.45)); } }
+        @media (prefers-reduced-motion: reduce) {
+            .title-svg.writing text, .sigil.drawing .ring .draw, .sigil.drawing .ring text, #mic-btn::before, #spell-result.glow { animation: none !important; }
+        }
+
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
         @media (max-width: 420px) {
@@ -568,7 +614,7 @@
     </div>
 
     <main id="main-content" class="levitate-target">
-        <h1>عصاك السحرية جاهزة</h1>
+        <h1><span class="sr-only">عصاك السحرية جاهزة</span><svg class="title-svg" id="title-svg" viewBox="0 0 600 120" aria-hidden="true"><defs><linearGradient id="ink-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="0.55" stop-color="#e8c27a"/><stop offset="1" stop-color="#9c7a3c"/></linearGradient></defs><text x="300" y="86" text-anchor="middle" direction="rtl">عصاك السحرية جاهزة</text></svg></h1>
         <div id="status" role="status" aria-live="polite">اضغط على الزر وانطق التعويذة</div>
 
         <div class="sigil" id="sigil">
@@ -578,8 +624,8 @@
                     <path id="ring-i" d="M118,118 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/>
                 </defs>
                 <g class="ring-outer">
-                    <circle cx="118" cy="118" r="117" fill="none" stroke="rgba(232,194,122,0.28)" stroke-width="1"/>
-                    <circle cx="118" cy="118" r="99" fill="none" stroke="rgba(232,194,122,0.18)" stroke-width="1"/>
+                    <circle class="draw" pathLength="1" cx="118" cy="118" r="117" fill="none" stroke="rgba(232,194,122,0.28)" stroke-width="1"/>
+                    <circle class="draw" pathLength="1" cx="118" cy="118" r="99" fill="none" stroke="rgba(232,194,122,0.18)" stroke-width="1"/>
                     <text><textPath href="#ring-o" startOffset="0">LUMOS ✦ PROTEGO ✦ ACCIO ✦ REPARO ✦ ALOHOMORA ✦ INCENDIO ✦ AGUAMENTI ✦</textPath></text>
                 </g>
                 <g class="ring-inner">
@@ -794,6 +840,15 @@
 
         function inscribe(node) {
             animate(node, { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'], opacity: [0.2, 1] }, { duration: 0.7, ease: [0.22, 1, 0.36, 1] });
+            resultText.classList.remove('glow'); void resultText.offsetWidth; resultText.classList.add('glow');
+            if (reduceMotion) return;
+            requestAnimationFrame(() => {
+                const r = node.getBoundingClientRect();
+                for (let i = 0; i <= 14; i++) setTimeout(() => {
+                    const x = r.left + r.width * (i / 14), y = r.top + r.height * (0.55 + Math.sin(i * 1.7) * 0.15);
+                    for (let k = 0; k < 3; k++) emit({ x, y, vx: (Math.random() - 0.5) * 1.4, vy: -Math.random() * 1.2, life: 0, max: 26 + Math.random() * 16, size: Math.random() * 1.6 + 0.7, kind: 'spark', color: palettes.gold[(Math.random() * 3) | 0], g: 0.03, drag: 0.96 });
+                }, i * 45);
+            });
         }
 
         /* ---------------- spell matching ---------------- */
@@ -1377,10 +1432,16 @@
             if (P.t > gallopStart + gallopLen + 55) P.on = false;
         }
 
+        (function fitTitle() {
+            const svg = document.getElementById('title-svg'); const fit = () => { try { const b = svg.querySelector('text').getBBox(); if (b.width) svg.setAttribute('viewBox', `${(b.x - 10).toFixed(0)} ${(b.y - 8).toFixed(0)} ${(b.width + 20).toFixed(0)} ${(b.height + 16).toFixed(0)}`); } catch (e) {} };
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit); else fit();
+        })();
+
         function drawExtras(dt) {
             if (!reduceMotion) {
                 cpx += (tpx - cpx) * 0.05 * dt; cpy += (tpy - cpy) * 0.05 * dt;
                 sceneEl.style.setProperty('--px', cpx.toFixed(3)); sceneEl.style.setProperty('--py', cpy.toFixed(3));
+                micBtn.style.setProperty('--ry', (cpx * 14).toFixed(1) + 'deg'); micBtn.style.setProperty('--rx', (-cpy * 14).toFixed(1) + 'deg');
             }
             if (body.classList.contains('lumos-active')) {
                 lx += (pointer.x - lx) * 0.12 * dt; ly += (pointer.y - ly) * 0.12 * dt;
@@ -1403,7 +1464,7 @@
 
         /* ---------------- entrance ---------------- */
         if (!reduceMotion) {
-            animate(document.querySelector('h1'), { opacity: [0, 1], filter: ['blur(10px)', 'blur(0px)'], y: [14, 0] }, { duration: 0.9 });
+            document.getElementById('title-svg').classList.add('writing'); sigil.classList.add('drawing');
             animate(statusText, { opacity: [0, 1] }, { duration: 0.6, delay: 0.35 });
             animate(sigil, { opacity: [0, 1], scale: [0.7, 1], rotate: [-25, 0] }, { duration: 1.1, delay: 0.2, type: M ? 'spring' : undefined, bounce: 0.25 });
         }
