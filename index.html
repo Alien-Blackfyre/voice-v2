@@ -477,7 +477,7 @@
         /* ---------- self-drawing title + ring ---------- */
         h1.writing { animation: ink-reveal 1.7s cubic-bezier(0.55, 0.1, 0.3, 1) both; }
         @keyframes ink-reveal { from { clip-path: inset(-25% -5% -25% 100%); } to { clip-path: inset(-25% -5% -25% -5%); } }
-        #fiendfyre-container, #dark-mark-container, #snake-container { display: none; }
+        #fiendfyre-container, #dark-mark-container, #snake-container, #clown-container, #lock-container, #slug-container { display: none; }
         .castle-photo { position: absolute; inset: 0; background: url('assets/bg/castle.jpg') 44% 60% / cover no-repeat; filter: saturate(1.05) brightness(0.85) blur(1.2px); transition: filter 1.2s ease; }
         .castle-photo::after { content: ''; position: absolute; inset: 0;
             background: radial-gradient(ellipse 55% 50% at 50% 45%, rgba(9, 12, 28, 0.72), rgba(9, 12, 28, 0) 72%), linear-gradient(180deg, rgba(9, 12, 28, 0.35) 0%, rgba(9, 12, 28, 0.05) 45%, rgba(9, 12, 28, 0.7) 100%); }
@@ -1012,18 +1012,6 @@
         function startFire(hot = false) { isFireActive = true; fireRate = hot ? 9 : 5; fireHeat = hot ? 1.45 : 1; body.classList.add('incendio-active'); Sound.loopNoise('fire', { type: 'lowpass', freq: hot ? 900 : 650, gain: hot ? 0.32 : 0.22, crackle: true }); }
         function stopFire() { if (!isFireActive) return; isFireActive = false; fireRate = 0; body.classList.remove('incendio-active'); Sound.stopLoop('fire'); }
 
-        function throwDisarmedWand() {
-            const wand = document.createElement('div'); wand.innerHTML = art('wand'); wand.className = 'disarmed-wand';
-            const edge = Math.floor(Math.random() * 4); let startX, startY, endX, endY;
-            if (edge === 0) { startX = Math.random() * window.innerWidth; startY = -200; endX = Math.random() * window.innerWidth; endY = window.innerHeight + 200; }
-            else if (edge === 1) { startX = window.innerWidth + 200; startY = Math.random() * window.innerHeight; endX = -200; endY = Math.random() * window.innerHeight; }
-            else if (edge === 2) { startX = Math.random() * window.innerWidth; startY = window.innerHeight + 200; endX = Math.random() * window.innerWidth; endY = -200; }
-            else { startX = -200; startY = Math.random() * window.innerHeight; endX = window.innerWidth + 200; endY = Math.random() * window.innerHeight; }
-            wand.style.left = `${startX}px`; wand.style.top = `${startY}px`;
-            const startRot = Math.random() * 360; wand.style.transform = `rotate(${startRot}deg)`; document.body.appendChild(wand);
-            void wand.offsetWidth; wand.style.left = `${endX}px`; wand.style.top = `${endY}px`; wand.style.transform = `rotate(${startRot + 720}deg)`;
-            setTimeout(() => wand.remove(), 1000);
-        }
 
         function shockwave() {
             const { x, y } = originPoint(); const s = document.createElement('div'); s.className = 'shockwave';
@@ -1092,7 +1080,7 @@
             }
             else if (spell === "nox") { if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; } body.classList.remove('lumos-active'); body.classList.add('nox-active'); setTimeout(() => body.classList.remove('nox-active'), 6000); statusText.innerText = "🌑 Nox!"; }
             else if (spell === "incendio") { statusText.innerText = "🔥 Incendio!"; startFire(false); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); if (statusText.innerText.includes("Incendio")) statusText.innerText = "✨ انطفأت النار!"; }, 8000); }
-            else if (spell === "fiendfyre") { statusText.innerText = "🐉 Fiendfyre!"; startFire(true); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if (statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
+            else if (spell === "fiendfyre") { statusText.innerText = "🐍 Fiendfyre!"; startFire(true); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if (statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
             else if (spell === "aguamenti") {
                 const water = document.getElementById('water-container'); water.style.opacity = "1"; body.classList.add('aguamenti-active');
                 waterSplash(isFireActive || body.classList.contains('fiendfyre-active'));
@@ -1140,12 +1128,12 @@
                 statusText.innerText = "✨ Vulnera Sanentur!"; const bloodCont = document.getElementById('blood-container');
                 if (bloodCont.children.length > 0) { bloodCont.classList.add('healing'); setTimeout(() => { bloodCont.innerHTML = ''; bloodCont.classList.remove('healing'); }, 1500); } else statusText.innerText = "✨ لم أجد جروحاً!";
             }
-            else if (spell === "riddikulus") { statusText.innerText = "🤡 Riddikulus!"; const clown = document.getElementById('clown-container'); clown.classList.add('show'); setTimeout(() => clown.classList.remove('show'), 3500); }
-            else if (spell === "alohomora") { statusText.innerText = "🔓 Alohomora!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.className = ""; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-unlock is-open"; }, 600); }
-            else if (spell === "colloportus") { statusText.innerText = "🔒 Colloportus!"; const lockCont = document.getElementById('lock-container'); const lockIcon = document.getElementById('lock-icon'); lockCont.classList.remove('show-lock'); void lockCont.offsetWidth; lockIcon.className = "is-open"; lockCont.classList.add('show-lock'); setTimeout(() => { lockIcon.className = "anim-lock"; }, 600); }
+            else if (spell === "riddikulus") { statusText.innerText = "🤡 Riddikulus!"; startBoggart(); }
+            else if (spell === "alohomora") { statusText.innerText = "🔓 Alohomora!"; startLock(true); }
+            else if (spell === "colloportus") { statusText.innerText = "🔒 Colloportus!"; startLock(false); }
             else if (spell === "slugulus eructo") {
                 statusText.innerText = "🐌 Slugulus Eructo!"; const slugCont = document.getElementById('slug-container');
-                for (let i = 0; i < 15; i++) { setTimeout(() => { let slug = document.createElement('div'); slug.innerHTML = art('snail'); slug.className = 'slug-particle'; slug.style.left = (Math.random() * 90 + 5) + 'vw'; slug.style.fontSize = (Math.random() * 3 + 2) + 'rem'; slug.style.animationDuration = (Math.random() * 3 + 4) + 's'; slugCont.appendChild(slug); setTimeout(() => slug.remove(), 7000); }, i * 300); }
+                startSlime();
             }
             else if (spell === "aparecium") {
                 clearTimeout(apareciumTimeout);
@@ -1181,7 +1169,7 @@
                 setTimeout(() => {
                     if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
                     document.getElementById('hp-music').pause();
-                    stopFire(); Sound.stopAll(); particles.length = 0; beams.length = 0; patronus.on = false; flock.length = 0; steps.length = 0; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
+                    stopFire(); Sound.stopAll(); particles.length = 0; beams.length = 0; patronus.on = false; flock.length = 0; steps.length = 0; wands.length = 0; confetti.length = 0; drips.length = 0; frost = null; padlock.t = -1; boggart.t = -1; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
                     document.getElementById('glass-crack-container').style.display = 'none';
                     document.getElementById('snake-container').classList.remove('vipera-evanesca-anim');
                     document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = '';
@@ -1197,7 +1185,7 @@
                 animate(patronusContainer, { opacity: [0, 1], y: [16, 0], scale: [0.96, 1] }, { duration: 0.6, type: M ? 'spring' : undefined, bounce: 0.3 });
                 document.getElementById('patronus-input').focus();
             }
-            else if (spell === "petrificus totalus") { statusText.innerText = "❄️ Petrificus Totalus!"; body.classList.add('frozen'); setTimeout(() => { body.classList.remove('frozen'); if (statusText.innerText.includes("Petrificus")) { statusText.innerText = "✨ تم فك التعويذة!"; resultText.textContent = ""; } }, 10000); }
+            else if (spell === "petrificus totalus") { statusText.innerText = "❄️ Petrificus Totalus!"; body.classList.add('frozen'); startFrost(); setTimeout(() => { body.classList.remove('frozen'); if (statusText.innerText.includes("Petrificus")) { statusText.innerText = "✨ تم فك التعويذة!"; resultText.textContent = ""; } }, 10000); }
             else if (spell === "avada kedavra") {
                 statusText.innerText = "☠️ تعويذة محظورة!";
                 const flash = document.getElementById('kill-flash');
@@ -1483,44 +1471,6 @@
             if (P.t > gallopStart + gallopLen + 55) P.on = false;
         }
 
-        /* ---------------- Fiendfyre: beasts made of fire ---------------- */
-        const beastPts = {};
-        [['snake', 'snake.webp'], ['dragon', 'dragon.png']].forEach(([n, file]) => {
-            const im = new Image();
-            im.onload = () => {
-                const S = 110, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
-                x.drawImage(im, 0, 0, S, S); const d = x.getImageData(0, 0, S, S).data; const pts = [];
-                for (let y = 0; y < S; y += 3) for (let xx = 0; xx < S; xx += 3) if (d[(y * S + xx) * 4 + 3] > 140) pts.push([(xx + Math.random() * 3) / S - 0.5, (y + Math.random() * 3) / S - 0.5]);
-                beastPts[n] = pts;
-            };
-            im.src = 'assets/noto/' + file;
-        });
-        const fiend = { t: 0, parts: null };
-        function drawFiend(dt) {
-            if (!body.classList.contains('fiendfyre-active') || !beastPts.snake || !beastPts.dragon) { fiend.parts = null; return; }
-            if (!fiend.parts) {
-                fiend.t = 0; fiend.parts = [];
-                for (const [n, side, flip] of [['snake', 0.7, 1], ['dragon', 0.3, -1]])
-                    for (const [px, py] of beastPts[n]) fiend.parts.push({ n, flip, px, py, x: W * side, y: H + 80, vx: 0, vy: 0, ph: Math.random() * 6.28 });
-            }
-            fiend.t += dt; const t = fiend.t, size = Math.min(W, H) * 0.58, rise = Math.min(1, t / 70);
-            const cs = [W * 0.7 + Math.sin(t * 0.025) * W * 0.05, H * (1.15 - 0.46 * rise) + Math.sin(t * 0.06) * 14];
-            const cd = [W * 0.3 + Math.sin(t * 0.02 + 1) * W * 0.04, H * (1.15 - 0.5 * rise) + Math.sin(t * 0.05 + 2) * 16];
-            fxCtx.globalCompositeOperation = 'lighter';
-            for (const p of fiend.parts) {
-                const c = p.n === 'snake' ? cs : cd;
-                const tx = c[0] + p.px * size * p.flip + Math.sin(t * 0.08 + p.py * 6) * 6, ty = c[1] + p.py * size;
-                p.vx += (tx - p.x) * 0.05 * dt; p.vy += (ty - p.y) * 0.05 * dt; p.vx *= 0.82; p.vy *= 0.82; p.x += p.vx * dt; p.y += p.vy * dt;
-                const f = 0.6 + Math.sin(t * 0.3 + p.ph) * 0.4;
-                fxCtx.globalAlpha = 0.85 * f; fxCtx.fillStyle = f > 0.75 ? '#ffe08a' : '#ff6a1a'; fxCtx.fillRect(p.x - 1.6, p.y - 1.6, 3.2, 3.2);
-            }
-            fxCtx.globalAlpha = 1;
-            const n = reduceMotion ? 2 : 11;
-            for (let k = 0; k < n; k++) {
-                const p = fiend.parts[(Math.random() * fiend.parts.length) | 0];
-                puff(pick(['flame_01', 'flame_03', 'flame_04']), pick(['#ff4a10', '#ff7a1a', '#ffb040']), p.x, p.y, { vy: -1.4, vx: (Math.random() - 0.5) * 0.6, size: 34 + Math.random() * 32, shrink: true, max: 26, alpha: 0.75 });
-            }
-        }
 
         /* ---------------- shape sampling (images used only as stencils) ---------------- */
         const shapes = {};
@@ -1655,6 +1605,145 @@
             ctx.globalAlpha = 1;
         }
 
+        /* ---------------- Expelliarmus: a wand knocked flying ---------------- */
+        const wands = [];
+        function throwDisarmedWand() {
+            const o = originPoint(), a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, sp = 14 + Math.random() * 6;
+            wands.push({ x: o.x, y: o.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, rot: Math.random() * 6.28, vr: 0.45 + Math.random() * 0.25, t: 0 });
+            for (let i = 0; i < 40; i++) { const b = Math.random() * 6.283, s = 3 + Math.random() * 6; emit({ x: o.x, y: o.y, vx: Math.cos(b) * s, vy: Math.sin(b) * s, life: 0, max: 30, size: 2, kind: 'spark', color: palettes.blood[(Math.random() * 3) | 0], g: 0.05, drag: 0.93, trail: true }); }
+            puff('light_01', '#ff3b3b', o.x, o.y, { size: 320, grow: 0.5, max: 22, alpha: 0.9 });
+        }
+        function drawWands(dt) {
+            const ctx = solidCtx, L = Math.min(W, H) * 0.22;
+            for (let i = wands.length - 1; i >= 0; i--) {
+                const w = wands[i]; w.t += dt; w.vy += 0.35 * dt; w.vx *= 0.995; w.x += w.vx * dt; w.y += w.vy * dt; w.rot += w.vr * dt; w.vr *= 0.995;
+                if (w.y > H + L || w.t > 200) { wands.splice(i, 1); continue; }
+                if (!reduceMotion) emit({ x: w.x, y: w.y, vx: 0, vy: 0, life: 0, max: 18, size: 1.6, kind: 'spark', color: '#ff6b6b', g: 0, drag: 0.9 });
+                ctx.save(); ctx.translate(w.x, w.y); ctx.rotate(w.rot);
+                const g = ctx.createLinearGradient(0, -4, 0, 4); g.addColorStop(0, '#b07a44'); g.addColorStop(0.5, '#6e4220'); g.addColorStop(1, '#3a200c');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-L / 2, -4.5); ctx.lineTo(L / 2, -1.6); ctx.lineTo(L / 2, 1.6); ctx.lineTo(-L / 2, 4.5); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#2a1606'; for (let k = 0; k < 4; k++) ctx.fillRect(-L / 2 + 6 + k * 9, -5, 3, 10);
+                ctx.fillStyle = 'rgba(255, 220, 170, 0.35)'; ctx.fillRect(-L / 2 + 40, -2.6, L - 50, 1.2);
+                ctx.restore();
+            }
+        }
+
+        /* ---------------- Riddikulus: boggart turns into a party ---------------- */
+        const boggart = { t: -1 }; const confetti = [];
+        function startBoggart() { boggart.t = 0; }
+        function drawBoggart(dt) {
+            if (boggart.t >= 0) {
+                boggart.t += dt; const cx = W / 2, cy = H * 0.45;
+                if (boggart.t < 70) {
+                    if (!reduceMotion) for (let k = 0; k < 4; k++) { const a = Math.random() * 6.283, r = 40 + Math.random() * 90; puff(pick(['smoke_01', 'smoke_04', 'smoke_07']), pick(['#3a2a55', '#24183a', '#4a3a6a']), cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.7, { vx: -Math.sin(a) * 1.5, vy: Math.cos(a) * 1.5, size: 90, grow: 0.6, max: 40, alpha: 0.5 }); }
+                } else {
+                    boggart.t = -1; Sound.fx.boing(); Sound.play('book-close', { gain: 0.5, rate: 1.6 });
+                    puff('star_06', '#ffffff', cx, cy, { size: 300, grow: 1, max: 22, alpha: 1 });
+                    const cols = ['#ff4d6d', '#ffd23f', '#3ddc97', '#4d9fff', '#c77dff', '#ff9f1c'];
+                    for (let i = 0; i < (reduceMotion ? 40 : 160); i++) { const a = Math.random() * 6.283, s = 4 + Math.random() * 11; confetti.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 4, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.4, w: 6 + Math.random() * 6, h: 3 + Math.random() * 4, c: pick(cols), t: 0, ribbon: Math.random() < 0.15 }); }
+                }
+            }
+            const ctx = solidCtx;
+            for (let i = confetti.length - 1; i >= 0; i--) {
+                const c = confetti[i]; c.t += dt; c.vy += 0.18 * dt; c.vx *= 0.985; c.vy *= 0.985; c.x += c.vx * dt + Math.sin(c.t * 0.1) * 0.6; c.y += c.vy * dt; c.rot += c.vr * dt;
+                if (c.y > H + 30 || c.t > 400) { confetti.splice(i, 1); continue; }
+                ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.c;
+                if (c.ribbon) { ctx.strokeStyle = c.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-14, 0); ctx.bezierCurveTo(-5, -10, 5, 10, 14, 0); ctx.stroke(); }
+                else ctx.fillRect(-c.w / 2, -c.h / 2 * Math.abs(Math.cos(c.t * 0.2)), c.w, c.h * Math.abs(Math.cos(c.t * 0.2)) + 0.5);
+                ctx.restore();
+            }
+        }
+
+        /* ---------------- Alohomora / Colloportus: brass padlock ---------------- */
+        const padlock = { t: -1, open: true };
+        function startLock(open) { padlock.t = 0; padlock.open = open; }
+        function drawLock(dt) {
+            if (padlock.t < 0) return;
+            padlock.t += dt; const t = padlock.t;
+            if (t > 160) { padlock.t = -1; return; }
+            const ctx = solidCtx, S = Math.min(W, H) * 0.22, cx = W > 700 ? W * 0.8 : W / 2, cy = W > 700 ? H * 0.5 : H * 0.8;
+            const pop = Math.min(1, t / 14), scale = 0.6 + 0.4 * (1 - Math.pow(1 - pop, 3)) + (t < 22 ? Math.sin(t * 0.5) * 0.03 : 0);
+            const alpha = t > 130 ? 1 - (t - 130) / 30 : Math.min(1, t / 8);
+            const switchT = 38, k = Math.min(1, Math.max(0, (t - switchT) / 10)), ease = 1 - Math.pow(1 - k, 3);
+            const lift = padlock.open ? ease : 1 - ease, shake = t > switchT && t < switchT + 12 ? Math.sin(t * 2.4) * 4 : 0;
+            if (t >= switchT && t < switchT + dt + 0.01) {
+                for (let i = 0; i < 50; i++) { const a = Math.random() * 6.283, s = 2 + Math.random() * 6; emit({ x: cx, y: cy - S * 0.15, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: 34, size: 2, kind: 'spark', color: palettes.gold[(Math.random() * 3) | 0], g: 0.08, drag: 0.94, trail: true }); }
+                puff('star_04', '#ffe3a0', cx, cy - S * 0.1, { size: S * 1.6, grow: 0.8, max: 24, alpha: 0.9 });
+            }
+            ctx.save(); ctx.globalAlpha = alpha; ctx.translate(cx + shake, cy); ctx.scale(scale, scale);
+            const sw = S * 0.62, sh = S * 0.5;
+            ctx.save(); ctx.translate(sw * 0.33, -sh * 0.1 - lift * S * 0.18); ctx.rotate(-lift * 0.5); ctx.translate(-sw * 0.33, 0);
+            const sg = ctx.createLinearGradient(-sw * 0.4, 0, sw * 0.4, 0); sg.addColorStop(0, '#8a8f99'); sg.addColorStop(0.5, '#eef1f6'); sg.addColorStop(1, '#6b707a');
+            ctx.strokeStyle = sg; ctx.lineWidth = S * 0.09; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(-sw * 0.33, 0); ctx.lineTo(-sw * 0.33, -sh * 0.35); ctx.arc(0, -sh * 0.35, sw * 0.33, Math.PI, 0); ctx.lineTo(sw * 0.33, 0); ctx.stroke();
+            ctx.restore();
+            const bg = ctx.createLinearGradient(0, -sh * 0.1, 0, sh); bg.addColorStop(0, '#fff0c2'); bg.addColorStop(0.35, '#e8c27a'); bg.addColorStop(1, '#7a5618');
+            ctx.fillStyle = bg; ctx.shadowColor = 'rgba(255, 210, 120, 0.6)'; ctx.shadowBlur = 30;
+            ctx.beginPath(); ctx.roundRect(-sw / 2, -sh * 0.1, sw, sh, S * 0.07); ctx.fill(); ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(90, 60, 15, 0.6)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = 'rgba(255, 250, 230, 0.5)'; ctx.fillRect(-sw / 2 + 8, -sh * 0.1 + 6, sw - 16, 3);
+            ctx.fillStyle = '#2a1c06'; ctx.beginPath(); ctx.arc(0, sh * 0.32, S * 0.055, 0, 6.283); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-S * 0.03, sh * 0.34); ctx.lineTo(-S * 0.045, sh * 0.62); ctx.lineTo(S * 0.045, sh * 0.62); ctx.lineTo(S * 0.03, sh * 0.34); ctx.fill();
+            if (padlock.open && k > 0) { ctx.globalAlpha = alpha * (1 - k * 0.6); const rg = ctx.createRadialGradient(0, sh * 0.4, 0, 0, sh * 0.4, S * 0.6); rg.addColorStop(0, 'rgba(255, 240, 200, 0.9)'); rg.addColorStop(1, 'rgba(255, 240, 200, 0)'); ctx.fillStyle = rg; ctx.fillRect(-S, -S, S * 2, S * 2); }
+            ctx.restore();
+        }
+
+        /* ---------------- Slugulus Eructo: dripping slime ---------------- */
+        const drips = [];
+        function startSlime() {
+            for (let i = 0; i < (reduceMotion ? 8 : 22); i++) setTimeout(() => drips.push({ x: Math.random() * W, len: 0, speed: 1.5 + Math.random() * 3, w: 8 + Math.random() * 14, t: 0, done: false }), i * 120);
+        }
+        function drawSlime(dt) {
+            if (!drips.length) return;
+            const ctx = solidCtx;
+            for (let i = drips.length - 1; i >= 0; i--) {
+                const d = drips[i]; d.t += dt;
+                if (!d.done) { d.len += d.speed * dt; d.speed += 0.04 * dt; if (d.len > H * (0.45 + (i % 5) * 0.1)) { d.done = true; puff(pick(['smoke_02', 'smoke_04']), '#7fd14a', d.x, d.len, { size: 60, grow: 0.8, max: 30, alpha: 0.5 }); for (let k = 0; k < 10; k++) emit({ x: d.x, y: d.len, vx: (Math.random() - 0.5) * 5, vy: -Math.random() * 4, life: 0, max: 40, size: 2.5, kind: 'spark', color: '#a6ff6b', g: 0.25, drag: 0.98 }); } }
+                const a = d.t > 300 ? Math.max(0, 1 - (d.t - 300) / 60) : 1; if (a <= 0) { drips.splice(i, 1); continue; }
+                const g = ctx.createLinearGradient(d.x - d.w / 2, 0, d.x + d.w / 2, 0); g.addColorStop(0, '#3b8a22'); g.addColorStop(0.4, '#9be35a'); g.addColorStop(1, '#2f6e1a');
+                ctx.globalAlpha = a * 0.92; ctx.fillStyle = g;
+                ctx.beginPath(); ctx.moveTo(d.x - d.w * 0.9, 0); ctx.quadraticCurveTo(d.x - d.w * 0.5, d.len * 0.4, d.x - d.w * 0.35, d.len - d.w * 0.6);
+                ctx.arc(d.x, d.len - d.w * 0.6, d.w * 0.55, Math.PI, 0, true); ctx.quadraticCurveTo(d.x + d.w * 0.5, d.len * 0.4, d.x + d.w * 0.9, 0); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = 'rgba(240, 255, 220, 0.6)'; ctx.fillRect(d.x - d.w * 0.25, d.len * 0.15, 2, d.len * 0.6);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        /* ---------------- Petrificus Totalus: frost creeping in ---------------- */
+        let frost = null;
+        function startFrost() {
+            const branches = []; const seeds = reduceMotion ? 20 : 64;
+            for (let i = 0; i < seeds; i++) {
+                const side = i % 4, p = Math.random();
+                const x = side === 0 ? p * W : side === 1 ? W : side === 2 ? p * W : 0, y = side === 0 ? 0 : side === 1 ? p * H : side === 2 ? H : p * H;
+                const ang = Math.atan2(H / 2 - y, W / 2 - x) + (Math.random() - 0.5) * 0.8;
+                branches.push({ x, y, ang, len: 0, max: Math.min(W, H) * (0.06 + Math.random() * 0.1), depth: 0, born: Math.random() * 10 });
+            }
+            frost = { t: 0, branches };
+        }
+        function drawFrost(dt) {
+            if (!frost) return;
+            frost.t += dt; const ctx = solidCtx, life = frost.t;
+            if (life > 600) { frost = null; return; }
+            const alpha = life > 540 ? 1 - (life - 540) / 60 : 1;
+            const add = [];
+            for (const b of frost.branches) {
+                if (life < b.born) continue;
+                if (b.len < b.max) {
+                    b.len = Math.min(b.max, b.len + 5 * dt);
+                    if (b.depth < 4 && Math.random() < 0.14 * dt) add.push({ x: b.x + Math.cos(b.ang) * b.len, y: b.y + Math.sin(b.ang) * b.len, ang: b.ang + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.5), len: 0, max: b.max * 0.6, depth: b.depth + 1, born: life });
+                }
+            }
+            frost.branches.push(...add.slice(0, 60));
+            ctx.save(); ctx.globalAlpha = alpha; ctx.lineCap = 'round'; ctx.shadowColor = 'rgba(200, 235, 255, 0.9)'; ctx.shadowBlur = 8;
+            for (const b of frost.branches) {
+                if (life < b.born || b.len <= 0) continue;
+                ctx.strokeStyle = b.depth ? 'rgba(200, 232, 255, 0.55)' : 'rgba(235, 248, 255, 0.8)'; ctx.lineWidth = Math.max(0.6, 1.8 - b.depth * 0.35);
+                ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x + Math.cos(b.ang) * b.len, b.y + Math.sin(b.ang) * b.len); ctx.stroke();
+            }
+            ctx.restore();
+        }
+
         function waterSplash(douse) {
             const cx = W / 2, cy = H * 0.93;
             for (let i = 0; i < (reduceMotion ? 20 : 110); i++) {
@@ -1663,6 +1752,37 @@
             }
             for (let i = 0; i < 6; i++) puff(pick(['smoke_02', 'smoke_04']), '#cfeeff', cx + (Math.random() - 0.5) * 200, cy, { vy: -2, vx: (Math.random() - 0.5) * 1.5, size: 140, grow: 1.2, max: 45, alpha: 0.35 });
             if (douse) for (let i = 0; i < 16; i++) puff(pick(['smoke_01', 'smoke_02', 'smoke_07']), '#e8e4dc', Math.random() * W, H * (0.6 + Math.random() * 0.35), { vy: -1.2 - Math.random(), vx: (Math.random() - 0.5) * 0.6, size: 180 + Math.random() * 120, grow: 1.4, max: 120, alpha: 0.28 });
+        }
+
+        /* ---------------- Fiendfyre: one giant serpent of fire ---------------- */
+        const serp = { t: 0, trail: [] };
+        function drawFiend(dt) {
+            if (!body.classList.contains('fiendfyre-active') || !TEX.light_01) { serp.t = 0; serp.trail.length = 0; return; }
+            serp.t += dt; const t = serp.t, size = Math.min(W, H), rise = Math.min(1, t / 70);
+            const hx = W / 2 + Math.sin(t * 0.018) * W * 0.34, hy = H * (1.15 - 0.62 * rise) + Math.sin(t * 0.033) * H * 0.13;
+            serp.trail.unshift([hx, hy]); if (serp.trail.length > 300) serp.trail.length = 300;
+            const glow = tint('light_01', '#ff4a10'), hot = tint('light_01', '#ffcf6a'), core = tint('light_01', '#fff2c8');
+            fxCtx.globalCompositeOperation = 'lighter';
+            const len = serp.trail.length;
+            for (let i = len - 1; i >= 0; i -= 3) {
+                const s = i / 300, [x, y] = serp.trail[i], r = size * 0.07 * (1 - s * 0.8) * (0.9 + Math.sin(t * 0.2 + i * 0.3) * 0.1);
+                fxCtx.globalAlpha = 0.34; fxCtx.drawImage(glow, x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
+                if (i % 6 === 0) { fxCtx.globalAlpha = 0.3; fxCtx.drawImage(hot, x - r, y - r, r * 2, r * 2); }
+            }
+            const [px, py] = serp.trail[Math.min(6, len - 1)], ang = Math.atan2(hy - py, hx - px), hr = size * 0.085;
+            fxCtx.globalAlpha = 0.55; fxCtx.drawImage(hot, hx - hr * 2, hy - hr * 2, hr * 4, hr * 4);
+            fxCtx.globalAlpha = 0.5; fxCtx.drawImage(core, hx - hr, hy - hr, hr * 2, hr * 2);
+            for (const side of [-1, 1]) {
+                const ex = hx + Math.cos(ang) * hr * 0.4 + Math.cos(ang + Math.PI / 2) * side * hr * 0.45, ey = hy + Math.sin(ang) * hr * 0.4 + Math.sin(ang + Math.PI / 2) * side * hr * 0.45;
+                fxCtx.globalAlpha = 1; fxCtx.drawImage(core, ex - hr * 0.22, ey - hr * 0.22, hr * 0.44, hr * 0.44);
+            }
+            fxCtx.globalAlpha = 1;
+            if (reduceMotion) return;
+            for (let k = 0; k < 26; k++) {
+                const i = (Math.random() * len) | 0, [x, y] = serp.trail[i], r = size * 0.07 * (1 - i / 300 * 0.8);
+                puff(pick(['flame_01', 'flame_03', 'flame_04', 'fire_01']), pick(['#ff3a0a', '#ff6a14', '#ff9a2a', '#ffc04a']), x + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r, { vy: -1.6 - Math.random() * 1.2, vx: (Math.random() - 0.5) * 0.8, size: r * (1.4 + Math.random()), shrink: true, max: 22, alpha: 0.7 });
+            }
+            for (let k = 0; k < 5; k++) puff(pick(['flame_01', 'flame_04']), pick(['#ffb040', '#ff7a1a']), hx + Math.cos(ang) * hr, hy + Math.sin(ang) * hr, { vx: Math.cos(ang) * 4 + (Math.random() - 0.5) * 2, vy: Math.sin(ang) * 4 + (Math.random() - 0.5) * 2, size: hr * 1.2, shrink: true, max: 18, alpha: 0.8 });
         }
 
         function writeTitle() {
@@ -1700,6 +1820,7 @@
             }
             solidCtx.clearRect(0, 0, W, H);
             drawSnake(dt); drawFlock(dt); drawFootprints(dt); drawDarkMark(dt);
+            drawFrost(dt); drawSlime(dt); drawLock(dt); drawBoggart(dt); drawWands(dt);
             drawFiend(dt); drawBeams(dt); drawPatronus(dt);
             fxCtx.globalCompositeOperation = 'source-over';
         }
