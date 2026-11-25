@@ -774,8 +774,11 @@
                 for (let i = 0; i < n; i++) {
                     const big = Math.random() < 0.35;
                     emit({ x: Math.random() * W, y: H + 20, vx: (Math.random() - 0.5) * 1.2, vy: -(Math.random() * 3.2 + 2.2) * fireHeat,
-                        life: 0, max: Math.random() * 70 + 50, size: big ? Math.random() * 46 + 28 : Math.random() * 3 + 1.5,
-                        kind: big ? 'flame' : 'ember', hue: Math.random() * 30 + (fireHeat > 1.2 ? 0 : 15), g: -0.02, drag: 0.995, wob: Math.random() * 6 });
+                        life: 0, max: Math.random() * 70 + 50, size: big ? (TEX.flame_01 ? Math.random() * 70 + 60 : Math.random() * 46 + 28) : Math.random() * 3 + 1.5,
+                        kind: big ? (TEX.flame_01 ? 'sprite' : 'flame') : 'ember', hue: Math.random() * 30 + (fireHeat > 1.2 ? 0 : 15), g: -0.02, drag: 0.995, wob: Math.random() * 6,
+                        tex: pick(['flame_01', 'flame_03', 'flame_04', 'fire_01']), color: pick(fireHeat > 1.2 ? ['#ff4a10', '#ff2a0a', '#ff7a1a'] : ['#ff9a2a', '#ff7a1a', '#ff5a10', '#ffc04a']),
+                        alpha: 0.6, rot: (Math.random() - 0.5) * 0.5, vr: (Math.random() - 0.5) * 0.01, shrink: true, grow: 0 });
+                    if (big && TEX.smoke_01 && Math.random() < 0.12) puff(pick(['smoke_01', 'smoke_02', 'smoke_04']), '#7a5a4a', Math.random() * W, H * (0.55 + Math.random() * 0.2), { vy: -0.8, size: 160, grow: 1.2, alpha: 0.16, max: 120 });
                 }
             }
 
@@ -788,7 +791,17 @@
                 p.vx *= p.drag; p.vy = p.vy * p.drag + p.g * dt;
                 p.x += (p.vx + (p.wob ? Math.sin((p.life + p.wob * 10) * 0.08) * 0.6 : 0)) * dt; p.y += p.vy * dt;
                 const k = 1 - p.life / p.max;
-                if (p.kind === 'flame') {
+                if (p.kind === 'sprite') {
+                    const img = tint(p.tex, p.color);
+                    if (img) {
+                        const sc = p.shrink ? 0.35 + 0.65 * k : 1 + (1 - k) * p.grow; const s = p.size * sc;
+                        p.rot += p.vr * dt;
+                        fxCtx.globalAlpha = Math.max(0, Math.min(1, p.life / (p.max * 0.15)) * k * p.alpha);
+                        fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); fxCtx.translate(p.x, p.y); fxCtx.rotate(p.rot);
+                        fxCtx.drawImage(img, -s / 2, -s / 2, s, s);
+                        fxCtx.setTransform(DPR, 0, 0, DPR, 0, 0); fxCtx.globalAlpha = 1;
+                    }
+                } else if (p.kind === 'flame') {
                     const r = p.size * (0.4 + k * 0.6);
                     const grd = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
                     grd.addColorStop(0, `hsla(${p.hue + 30}, 100%, 70%, ${0.55 * k})`);
@@ -835,6 +848,8 @@
                 emit({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5, life: 0, max: Math.random() * 40 + 35, size: Math.random() * 2.6 + 1,
                     kind: 'spark', color: pal[(Math.random() * pal.length) | 0], g: 0.06, drag: 0.955, trail: true });
             }
+            puff('twirl_02', pal[1], x, y, { size: 170, vr: 0.09, grow: 0.5, max: 34, alpha: 0.85 });
+            puff(pick(['magic_01', 'magic_02', 'magic_03']), pal[0], x, y, { size: 120, grow: 0.8, max: 26, alpha: 0.7 });
             animate(sigil, { scale: [1, 1.08, 1] }, { duration: 0.5, type: M ? 'spring' : undefined, bounce: 0.5 });
         }
 
@@ -956,14 +971,14 @@
             bookBody.appendChild(g);
         }
         function openBook() {
-            grimoire.classList.add('open'); scrim.classList.add('open'); grimoire.setAttribute('aria-hidden', 'false'); bookBtn.setAttribute('aria-expanded', 'true');
+            Sound.play('book-open', { gain: 0.8 }); grimoire.classList.add('open'); scrim.classList.add('open'); grimoire.setAttribute('aria-hidden', 'false'); bookBtn.setAttribute('aria-expanded', 'true');
             const rows = bookBody.querySelectorAll('.book-group');
             if (M && M.stagger) animate(rows, { opacity: [0, 1], x: [-14, 0] }, { duration: 0.35, delay: M.stagger(0.04, { startDelay: 0.12 }) });
             setTimeout(() => document.getElementById('book-close').focus(), 50);
         }
         function closeBook() {
             if (!grimoire.classList.contains('open')) return;
-            grimoire.classList.remove('open'); scrim.classList.remove('open'); grimoire.setAttribute('aria-hidden', 'true'); bookBtn.setAttribute('aria-expanded', 'false');
+            Sound.play('book-close', { gain: 0.7 }); grimoire.classList.remove('open'); scrim.classList.remove('open'); grimoire.setAttribute('aria-hidden', 'true'); bookBtn.setAttribute('aria-expanded', 'false');
             bookBtn.focus();
         }
         bookBtn.addEventListener('click', openBook);
@@ -991,6 +1006,8 @@
         function shockwave() {
             const { x, y } = originPoint(); const s = document.createElement('div'); s.className = 'shockwave';
             s.style.left = x + 'px'; s.style.top = y + 'px'; document.body.appendChild(s); setTimeout(() => s.remove(), 750);
+            puff('light_01', '#ffd28a', x, y, { size: 520, grow: 0.6, max: 26, alpha: 0.9 });
+            for (let i = 0; i < 9; i++) { const a = Math.random() * 6.283; puff(pick(['smoke_01', 'smoke_04', 'smoke_07']), pick(['#ff9a4a', '#c9783a', '#8a5a3a']), x, y, { vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, size: 150, grow: 1.6, max: 70, alpha: 0.35, drag: 0.95 }); }
             for (let i = 0; i < (reduceMotion ? 20 : 120); i++) {
                 const a = Math.random() * Math.PI * 2; const sp = Math.random() * 14 + 4;
                 emit({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: Math.random() * 30 + 25, size: Math.random() * 3 + 1.2, kind: 'spark', color: palettes.fire[(Math.random() * 3) | 0], g: 0.12, drag: 0.94, trail: true });
@@ -1118,7 +1135,7 @@
             }
             else if (spell === "homenum revelio") {
                 statusText.innerText = "👣 Homenum Revelio! (كشف التواجد)";
-                for (let i = 0; i < 6; i++) { setTimeout(() => { let step = document.createElement('div'); step.innerHTML = art('footprints'); step.className = 'footstep'; step.style.left = (12 + i * 13) + 'vw'; step.style.top = (52 + (i % 2 ? -7 : 7)) + 'vh'; step.style.rotate = '90deg'; document.body.appendChild(step); setTimeout(() => step.remove(), 3000); }, i * 800); }
+                for (let i = 0; i < 6; i++) { setTimeout(() => { let step = document.createElement('div'); step.innerHTML = art('footprints'); Sound.play('step' + (i % 5), { gain: 0.9 }); step.className = 'footstep'; step.style.left = (12 + i * 13) + 'vw'; step.style.top = (52 + (i % 2 ? -7 : 7)) + 'vh'; step.style.rotate = '90deg'; document.body.appendChild(step); setTimeout(() => step.remove(), 3000); }, i * 800); }
             }
             else if (spell === "sonorus") { statusText.innerText = "🔊 Sonorus! (تشغيل الموسيقى)"; let bgMusic = document.getElementById('hp-music'); bgMusic.play().catch(e => { statusText.innerText = "عذراً! الرجاء إضافة ملف hp-theme.mp3 بجانب الكود"; }); }
             else if (spell === "quietus") { statusText.innerText = "🔇 Quietus! (إيقاف الموسيقى)"; document.getElementById('hp-music').pause(); }
@@ -1163,6 +1180,7 @@
                 const flash = document.getElementById('kill-flash');
                 setTimeout(() => {
                     animate(flash, { opacity: [0, 1, 0] }, { duration: 0.9 });
+                    puff('light_01', '#3dff7a', W / 2, H / 2, { size: Math.max(W, H) * 1.2, grow: 0.3, max: 40, alpha: 1 });
                     setTimeout(() => {
                         const go = document.getElementById('game-over'); go.classList.add('show');
                         if (recognition) try { recognition.abort(); } catch (e) {}
@@ -1188,7 +1206,15 @@
                 const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
                 noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
                 const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+                SAMPLES.forEach(n => fetch('assets/sfx/' + n + '.mp3').then(r => r.arrayBuffer()).then(a => ctx.decodeAudioData(a)).then(b => { bufs[n] = b; }).catch(() => {}));
                 return ctx;
+            }
+            const bufs = {};
+            const SAMPLES = ['book-open', 'book-close', 'explosion', 'explosion-low', 'shield-up', 'shield-hit', 'unlock', 'door-open', 'door-close', 'lock-click', 'step0', 'step1', 'step2', 'step3', 'step4', 'slash', 'slash2', 'wand-drop', 'slime', 'stone', 'burn', 'glass', 'ice', 'thud'];
+            function play(n, { gain = 0.8, rate = 1, delay = 0 } = {}) {
+                const c = ensure(); if (!c || !bufs[n]) return false;
+                const s = c.createBufferSource(); s.buffer = bufs[n]; s.playbackRate.value = rate;
+                const g = c.createGain(); g.gain.value = gain; s.connect(g); g.connect(master); s.start(c.currentTime + delay); return true;
             }
             function env(g, t, a, peak, dcy) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dcy); }
             function noise({ dur = 0.5, type = 'bandpass', f0 = 1200, f1 = 300, q = 1, peak = 0.5, a = 0.01, delay = 0 }) {
@@ -1246,7 +1272,7 @@
                 fizzle() { noise({ dur: 0.4, f0: 900, f1: 300, peak: 0.2 }); }
             };
             return {
-                ensure, fx, loopNoise, hum, stopLoop,
+                ensure, fx, play, loopNoise, hum, stopLoop,
                 stopAll() { Object.keys(loops).forEach(n => stopLoop(n, 0.3)); },
                 get muted() { return muted; },
                 setMuted(m) { muted = m; try { localStorage.setItem('voice-muted', m ? '1' : '0'); } catch (e) {} if (master) master.gain.setTargetAtTime(m ? 0 : 0.8, ctx.currentTime, 0.05); }
@@ -1373,6 +1399,8 @@
                     if (b.t >= 1) {
                         b.hit = true;
                         for (let k = 0; k < (reduceMotion ? 12 : 46); k++) { const a = Math.random() * 6.283, sp = Math.random() * 6 + 1.5; emit({ x: b.x1, y: b.y1, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 26 + Math.random() * 24, size: Math.random() * 2.4 + 1, kind: 'spark', color: b.pal[(Math.random() * 3) | 0], g: 0.07, drag: 0.94, trail: true }); }
+                        puff(pick(['star_04', 'star_06', 'star_07']), b.pal[0], b.x1, b.y1, { size: 130, grow: 1, max: 22, alpha: 0.95, vr: 0.05 });
+                        puff(pick(['magic_02', 'magic_05']), b.pal[1], b.x1, b.y1, { size: 110, grow: 0.9, max: 30, alpha: 0.7 });
                         if (b.onImpact) b.onImpact();
                     }
                 } else {
@@ -1448,6 +1476,13 @@
                 bloomEl.style.setProperty('--lx', lx.toFixed(1) + 'px'); bloomEl.style.setProperty('--ly', ly.toFixed(1) + 'px');
                 if (!reduceMotion && Math.random() < 0.5) emit({ x: lx, y: ly, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, life: 0, max: 24, size: Math.random() * 1.4 + 0.6, kind: 'spark', color: palettes.light[(Math.random() * 3) | 0], g: 0, drag: 0.95 });
             }
+            if (!reduceMotion && body.classList.contains('morsmordre-active') && Math.random() < 0.3 * dt)
+                puff(pick(['smoke_01', 'smoke_02', 'smoke_04', 'smoke_07']), pick(['#2fd96a', '#1fa850', '#5cff95']), W / 2 + (Math.random() - 0.5) * 320, H * 0.2 + (Math.random() - 0.5) * 140,
+                    { vx: (Math.random() - 0.5) * 0.3, vy: -0.12, size: 140 + Math.random() * 120, grow: 0.7, max: 220, alpha: 0.2, vr: (Math.random() - 0.5) * 0.006 });
+            if (!reduceMotion && patronus.on && patronus.parts.length && Math.random() < 0.5 * dt) {
+                const p = patronus.parts[(Math.random() * patronus.parts.length) | 0];
+                puff('smoke_07', '#bfe6ff', p.x, p.y, { vx: patronus.t > 55 ? 1.6 : 0, vy: -0.2, size: 70, grow: 1.1, max: 60, alpha: 0.14 });
+            }
             drawBeams(dt); drawPatronus(dt);
             fxCtx.globalCompositeOperation = 'source-over';
         }
@@ -1456,10 +1491,38 @@
             const d = document.getElementById('protego-dome'); d.classList.remove('hit'); void d.offsetWidth; d.classList.add('hit');
         }
 
+        const spellSamples = {
+            bombarda: [['explosion', 1], ['explosion-low', 0.9], ['glass', 0.55, 0.08]], protego: [['shield-up', 0.8]],
+            alohomora: [['door-open', 0.7], ['unlock', 0.9, 0.55]], colloportus: [['door-close', 0.7], ['lock-click', 0.9, 0.5]],
+            diffindo: [['slash', 0.9]], sectumsempra: [['slash', 0.9], ['slash2', 0.8, 0.14], ['slash', 0.7, 0.28]],
+            expelliarmus: [['wand-drop', 0.8, 0.9]], 'slugulus eructo': [['slime', 0.8], ['slime', 0.6, 0.5], ['slime', 0.6, 1.1]],
+            duro: [['stone', 0.9]], 'vipera evanesca': [['burn', 0.9]], incendio: [['burn', 0.7]], fiendfyre: [['burn', 1], ['explosion-low', 0.5]],
+            'petrificus totalus': [['ice', 0.9]], descendo: [['thud', 0.9]], 'finite incantatem': [['stone', 0.5, 0, 1.4]]
+        };
         function onSpellImpact(spell, blocked) {
-            if (blocked) { Sound.fx.block(); buzz([15, 25, 15]); return; }
-            const s = spellSound[spell]; Sound.fx[s || 'chime']();
+            if (blocked) { if (!Sound.play('shield-hit', { gain: 0.8 })) Sound.fx.block(); buzz([15, 25, 15]); return; }
+            const list = spellSamples[spell];
+            const played = list ? list.map(([n, g, d = 0, r = 1]) => Sound.play(n, { gain: g, delay: d, rate: r })).some(Boolean) : false;
+            if (!played || spell === 'expelliarmus') { const s = spellSound[spell]; Sound.fx[s || 'chime'](); }
             buzz(spellBuzz[spell] || 20);
+        }
+
+        /* ---------------- texture sprites (Kenney particle pack, CC0) ---------------- */
+        const TEX = {}; const tintCache = new Map();
+        ['smoke_01', 'smoke_02', 'smoke_04', 'smoke_07', 'flame_01', 'flame_03', 'flame_04', 'fire_01', 'magic_01', 'magic_02', 'magic_03', 'magic_05', 'spark_01', 'spark_04', 'star_04', 'star_06', 'star_07', 'light_01', 'twirl_02', 'symbol_02']
+            .forEach(n => { const im = new Image(); im.onload = () => { TEX[n] = im; }; im.src = 'assets/fx/' + n + '.png'; });
+        function tint(n, color) {
+            const k = n + color; let c = tintCache.get(k); if (c) return c;
+            const im = TEX[n]; if (!im) return null;
+            c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d');
+            x.drawImage(im, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
+            tintCache.set(k, c); return c;
+        }
+        const pick = (a) => a[(Math.random() * a.length) | 0];
+        function puff(tex, color, x, y, o = {}) {
+            if (!TEX[tex]) return;
+            emit({ x, y, vx: o.vx || 0, vy: o.vy || 0, life: 0, max: o.max || 40, size: o.size || 100, kind: 'sprite', tex, color, alpha: o.alpha == null ? 0.8 : o.alpha,
+                rot: Math.random() * 6.283, vr: o.vr == null ? (Math.random() - 0.5) * 0.04 : o.vr, grow: o.grow || 0, shrink: !!o.shrink, g: o.g || 0, drag: o.drag || 0.99 });
         }
 
         /* ---------------- entrance ---------------- */
