@@ -229,19 +229,85 @@
         .spell-row.hostile .name { color: #ffb4b0; }
 
         /* ---------- spell effects ---------- */
-        body.lumos-active { background: #fffaf0; color: #2a2210; }
-        body.lumos-active #status { color: #5c4a22; }
-        body.lumos-active h1, body.lumos-active #spell-result { background: linear-gradient(180deg, #8a6420 0%, #4a3510 100%); -webkit-background-clip: text; background-clip: text; filter: none; }
-        body.lumos-active .ring text { fill: rgba(110, 80, 24, 0.6); }
-        body.lumos-active .ring circle { stroke: rgba(110, 80, 24, 0.3); }
-        body.lumos-active #patronus-container { background: rgba(255, 255, 255, 0.6); border-color: rgba(40, 90, 140, 0.35); }
-        body.lumos-active #patronus-container p { color: #1d3550; }
         #lumos-bloom {
-            position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
-            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff7dc 35%, #ffe9b0 70%, #f5d88f 100%);
+            --lx: 50%; --ly: 50%;
+            position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+            background: radial-gradient(circle at var(--lx) var(--ly), rgba(255, 252, 240, 0.95) 0, rgba(255, 240, 205, 0.62) 8vmax, rgba(255, 226, 170, 0.24) 22vmax, rgba(255, 220, 160, 0.07) 38vmax, rgba(0, 0, 0, 0) 55vmax);
             transition: opacity 1.2s ease;
         }
         body.lumos-active #lumos-bloom { opacity: 1; }
+        body.lumos-active #scene { filter: brightness(1.55) saturate(1.1); }
+
+        /* ---------- Great Hall night scene ---------- */
+        #scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; transition: opacity 1.2s ease, filter 1.2s ease; --px: 0; --py: 0; }
+        .layer { position: absolute; inset: -5%; transform: translate3d(calc(var(--px) * var(--d) * -1px), calc(var(--py) * var(--d) * -1px), 0); }
+        .moon {
+            position: absolute; top: 12%; left: 14%; width: clamp(64px, 10vw, 124px); aspect-ratio: 1; border-radius: 50%;
+            background: radial-gradient(circle at 36% 34%, #fffdf3 0%, #f4ebcd 42%, #dccd9f 72%, #bba975 100%);
+            box-shadow: 0 0 36px 6px rgba(255, 244, 210, 0.32), 0 0 140px 50px rgba(170, 190, 255, 0.12);
+            transition: filter 1.2s ease;
+        }
+        .moon::after { content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: radial-gradient(circle at 62% 40%, rgba(150, 130, 90, 0.35) 0 9%, transparent 10%), radial-gradient(circle at 40% 66%, rgba(150, 130, 90, 0.28) 0 7%, transparent 8%), radial-gradient(circle at 70% 70%, rgba(150, 130, 90, 0.22) 0 5%, transparent 6%); }
+        .cloud { position: absolute; left: 0; border-radius: 999px; background: rgba(175, 185, 225, 0.11); filter: blur(16px); animation: drift linear infinite; transition: background-color 1.5s ease; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; border-radius: 50%; background: inherit; }
+        .cloud::before { width: 45%; height: 160%; left: 18%; top: -70%; }
+        .cloud::after { width: 35%; height: 130%; left: 52%; top: -50%; }
+        @keyframes drift { from { transform: translateX(-40vw); } to { transform: translateX(140vw); } }
+        .castle { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 44vh; }
+        .castle .far { fill: #121733; }
+        .castle .near { fill: #0a0d20; }
+        .castle .win { fill: #ffcf7a; transition: fill 0.8s ease; animation: win-flicker 3.4s ease-in-out infinite alternate; }
+        .castle .win:nth-of-type(3n) { animation-duration: 2.3s; } .castle .win:nth-of-type(4n) { animation-delay: -1.2s; }
+        @keyframes win-flicker { 0% { opacity: 0.95; } 60% { opacity: 0.7; } 100% { opacity: 1; } }
+        .candle {
+            --s: 1; position: absolute; width: calc(9px * var(--s)); height: calc(54px * var(--s)); border-radius: 3px 3px 2px 2px;
+            background: linear-gradient(90deg, #c7b993, #fff6dc 45%, #d6c7a0); opacity: var(--o, 1); filter: blur(var(--b, 0px));
+            animation: bob var(--dur, 5s) ease-in-out var(--delay, 0s) infinite alternate;
+        }
+        .candle::before {
+            content: ''; position: absolute; left: 50%; bottom: 96%; width: 170%; height: calc(20px * var(--s)); transform-origin: 50% 100%;
+            border-radius: 50% 50% 50% 50% / 64% 64% 36% 36%;
+            background: radial-gradient(ellipse at 50% 72%, #ffffff 0, #ffeaa8 28%, #ffb43a 58%, rgba(255, 120, 20, 0) 76%);
+            animation: flame 0.13s ease-in-out infinite alternate; transition: opacity 0.6s ease;
+        }
+        .candle::after {
+            content: ''; position: absolute; left: 50%; bottom: 70%; width: calc(80px * var(--s)); height: calc(80px * var(--s)); transform: translate(-50%, 30%);
+            border-radius: 50%; background: radial-gradient(circle, rgba(255, 190, 90, 0.34), rgba(255, 190, 90, 0) 70%); transition: opacity 0.6s ease;
+        }
+        @keyframes bob { to { transform: translateY(calc(-16px * var(--s))) rotate(1.5deg); } }
+        @keyframes flame { from { transform: translateX(-50%) scaleY(1) skewX(-3deg); } to { transform: translateX(-50%) scaleY(1.14) skewX(3deg); } }
+        body.nox-active .candle::before, body.nox-active .candle::after { opacity: 0; }
+        body.nox-active .castle .win { fill: #1a1f38; animation: none; }
+        body.nox-active #scene { filter: brightness(0.6); }
+        body.morsmordre-active .cloud { background-color: rgba(40, 255, 110, 0.17); }
+        body.morsmordre-active .moon { filter: hue-rotate(70deg) saturate(2.2) brightness(0.8); }
+        body.aparecium-active #scene { opacity: 0; }
+        body.duro-active #scene { filter: grayscale(1) brightness(0.65); }
+
+        /* ---------- Protego dome ---------- */
+        #protego-dome {
+            position: fixed; left: 50%; top: 50%; width: min(94vw, 540px); aspect-ratio: 1; border-radius: 50%; z-index: 26; pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.2); opacity: 0;
+            background: radial-gradient(circle, rgba(159, 216, 255, 0) 50%, rgba(159, 216, 255, 0.07) 60%, rgba(190, 230, 255, 0.3) 68.5%, rgba(230, 246, 255, 0.75) 70.3%, rgba(159, 216, 255, 0) 71.6%);
+            transition: transform 0.7s var(--ease-spring), opacity 0.45s ease;
+        }
+        #protego-dome::before {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(255, 255, 255, 0) 0 18%, rgba(225, 244, 255, 0.55) 24%, rgba(255, 255, 255, 0) 31% 64%, rgba(225, 244, 255, 0.4) 71%, rgba(255, 255, 255, 0) 78%);
+            -webkit-mask: radial-gradient(circle, transparent 62%, #000 68%, #000 71%, transparent 72%); mask: radial-gradient(circle, transparent 62%, #000 68%, #000 71%, transparent 72%);
+            animation: turn 5s linear infinite;
+        }
+        body.protego-active #protego-dome { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #protego-dome.hit { animation: dome-hit 0.5s var(--ease-out); }
+        @keyframes dome-hit { 30% { filter: brightness(2.4); transform: translate(-50%, -50%) scale(1.05); } }
+        body.protego-active #protego-shield { opacity: 0.45; }
+
+        /* ---------- top bar extras ---------- */
+        .chip { min-height: 44px; }
+        .topbar-end { display: flex; gap: 8px; pointer-events: none; }
+        .chip.icon-only { width: 44px; padding: 0; justify-content: center; }
+        #sound-btn[aria-pressed="true"] .ic-off, #sound-btn[aria-pressed="false"] .ic-on { display: none; }
 
         body.frozen { pointer-events: none !important; user-select: none; filter: grayscale(100%) contrast(140%) brightness(85%); }
         #frost { position: fixed; inset: 0; z-index: 9990; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
@@ -419,7 +485,7 @@
         @media (prefers-reduced-motion: reduce) {
             .ring-outer, .ring-inner, .sigil.listening .ripple, #mic-btn.listening,
             body.protego-active #protego-shield, body.morsmordre-active #dark-mark-container,
-            .wave, body.incendio-active #fire-glow { animation: none !important; }
+            .wave, body.incendio-active #fire-glow, .cloud, .candle, .candle::before, #protego-dome::before, .castle .win { animation: none !important; }
             #main-content, #grimoire { transition-duration: 0.01s; }
         }
     </style>
@@ -429,6 +495,14 @@
     <audio id="hp-music" src="hp-theme.mp3" loop preload="none"></audio>
 
     <canvas id="dust" aria-hidden="true"></canvas>
+    <div id="scene" aria-hidden="true">
+        <div class="layer" style="--d: 6"><div class="moon"></div></div>
+        <div class="layer" style="--d: 10" id="clouds"></div>
+        <div class="layer" style="--d: 14">
+            <svg class="castle" id="castle" viewBox="0 0 1000 300" preserveAspectRatio="xMidYMax slice"></svg>
+        </div>
+        <div class="layer" style="--d: 26" id="candles"></div>
+    </div>
     <div id="lumos-bloom" aria-hidden="true"></div>
     <div id="fire-glow" aria-hidden="true"></div>
 
@@ -437,13 +511,20 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/></svg>
             <span>كتابة</span>
         </button>
+        <div class="topbar-end">
+        <button id="sound-btn" class="chip icon-only" type="button" aria-pressed="true" aria-label="أصوات التعاويذ">
+            <svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+            <svg class="ic-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+        </button>
         <button id="book-btn" class="chip" type="button" aria-controls="grimoire" aria-expanded="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M12 7.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2L9.1 9.6l2-.3z"/></svg>
             <span>كتاب التعاويذ</span>
         </button>
+        </div>
     </header>
 
     <div id="protego-shield" aria-hidden="true"></div>
+    <div id="protego-dome" aria-hidden="true"></div>
     <div id="frost" aria-hidden="true"></div>
 
     <div id="hidden-riddle">"أنا فاكهة مرسومة في لوحة بالقرب من قبو هافلباف، إذا دغدغتني أضحك وأتحول إلى مقبض باب، فمن أنا؟"</div>
@@ -634,6 +715,7 @@
             const dt = Math.min((t - lastT) / 16.67, 3); lastT = t;
 
             dustCtx.clearRect(0, 0, W, H);
+            drawStars(dt);
             for (let i = 0; i < motes.length; i++) {
                 const m = motes[i]; m.y -= m.s * dt * 16.67; m.p += 0.01 * dt; if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
                 const a = 0.25 + Math.sin(m.p) * 0.2;
@@ -675,6 +757,7 @@
                     fxCtx.globalAlpha = 1;
                 }
             }
+            drawExtras(dt);
             fxCtx.globalCompositeOperation = 'source-over';
             requestAnimationFrame(frame);
         }
@@ -792,8 +875,11 @@
                 resultText.appendChild(heard); line.textContent = correctedSpell;
             } else line.textContent = rawText;
             line.style.display = 'inline-block'; resultText.appendChild(line); inscribe(line);
-            if (validSpells.includes(correctedSpell)) castBurst(correctedSpell);
-            executeSpell(correctedSpell);
+            if (validSpells.includes(correctedSpell)) {
+                castBurst(correctedSpell); Sound.fx.cast(); buzz(15);
+                const blocked = isProtegoActive && hostileSpells.includes(correctedSpell);
+                castBeam(correctedSpell, () => { onSpellImpact(correctedSpell, blocked); executeSpell(correctedSpell); }, blocked);
+            } else { Sound.fx.fizzle(); executeSpell(correctedSpell); }
         }
 
         castForm.addEventListener('submit', (e) => { e.preventDefault(); handleSpellInput(spellInput.value); spellInput.value = ""; });
@@ -831,8 +917,8 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeBook(); });
 
         /* ---------------- effects ---------------- */
-        function startFire(hot = false) { isFireActive = true; fireRate = hot ? 9 : 5; fireHeat = hot ? 1.45 : 1; body.classList.add('incendio-active'); }
-        function stopFire() { if (!isFireActive) return; isFireActive = false; fireRate = 0; body.classList.remove('incendio-active'); }
+        function startFire(hot = false) { isFireActive = true; fireRate = hot ? 9 : 5; fireHeat = hot ? 1.45 : 1; body.classList.add('incendio-active'); Sound.loopNoise('fire', { type: 'lowpass', freq: hot ? 900 : 650, gain: hot ? 0.32 : 0.22, crackle: true }); }
+        function stopFire() { if (!isFireActive) return; isFireActive = false; fireRate = 0; body.classList.remove('incendio-active'); Sound.stopLoop('fire'); }
 
         function throwDisarmedWand() {
             const wand = document.createElement('div'); wand.innerHTML = art('wand'); wand.className = 'disarmed-wand';
@@ -893,7 +979,7 @@
 
             if (isProtegoActive && hostileSpells.includes(spell)) {
                 statusText.innerText = `🛡️ Protego! (تم صد ${spell})`;
-                protegoShield.classList.add('shield-ripple'); shieldBurst();
+                protegoShield.classList.add('shield-ripple'); shieldBurst(); domeHit();
                 setTimeout(() => protegoShield.classList.remove('shield-ripple'), 300);
                 return;
             }
@@ -906,12 +992,11 @@
                     else throw new Error();
                 } catch (e) {
                     if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
-                    body.classList.add('lumos-active'); statusText.innerText = "✨ Lumos! (كشاف الشاشة)";
-                    const bloom = document.getElementById('lumos-bloom'); const { x, y } = originPoint();
-                    bloom.style.background = `radial-gradient(circle at ${x}px ${y}px, #ffffff 0%, #fff7dc 30%, #ffe9b0 65%, #f5d88f 100%)`;
+                    const o = originPoint(); lx = o.x; ly = o.y; if (!pointer.moved) { pointer.x = o.x; pointer.y = o.y; }
+                    body.classList.add('lumos-active'); statusText.innerText = "✨ Lumos! (حرك صباعك والنور يمشي معاك)";
                 }
             }
-            else if (spell === "nox") { if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; } body.classList.remove('lumos-active'); statusText.innerText = "🌑 Nox!"; }
+            else if (spell === "nox") { if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; } body.classList.remove('lumos-active'); body.classList.add('nox-active'); setTimeout(() => body.classList.remove('nox-active'), 6000); statusText.innerText = "🌑 Nox!"; }
             else if (spell === "incendio") { statusText.innerText = "🔥 Incendio!"; startFire(false); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); if (statusText.innerText.includes("Incendio")) statusText.innerText = "✨ انطفأت النار!"; }, 8000); }
             else if (spell === "fiendfyre") { statusText.innerText = "🐉 Fiendfyre!"; startFire(true); body.classList.add('fiendfyre-active'); clearTimeout(fireTimeout); fireTimeout = setTimeout(() => { stopFire(); body.classList.remove('fiendfyre-active'); if (statusText.innerText.includes("Fiendfyre")) statusText.innerText = "✨ انطفأت نار اللعنة!"; }, 10000); }
             else if (spell === "aguamenti") {
@@ -990,16 +1075,18 @@
             }
             else if (spell === "morsmordre") { statusText.innerText = "💀 Morsmordre!"; body.classList.add('morsmordre-active'); }
             else if (spell === "protego") {
-                statusText.innerText = "🛡️ Protego! (درع الحماية مفعل)"; isProtegoActive = true; body.classList.add('protego-active'); shieldBurst();
+                statusText.innerText = "🛡️ Protego! (درع الحماية مفعل)"; isProtegoActive = true;
+                const dome = document.getElementById('protego-dome'); const o = originPoint(); dome.style.left = o.x + 'px'; dome.style.top = o.y + 'px';
+                body.classList.add('protego-active'); shieldBurst(); Sound.hum('shield');
                 clearTimeout(protegoTimeout);
-                protegoTimeout = setTimeout(() => { isProtegoActive = false; body.classList.remove('protego-active'); if (statusText.innerText.includes("Protego")) statusText.innerText = "✨ تلاشى الدرع السحري!"; }, 15000);
+                protegoTimeout = setTimeout(() => { isProtegoActive = false; body.classList.remove('protego-active'); Sound.stopLoop('shield'); if (statusText.innerText.includes("Protego")) statusText.innerText = "✨ تلاشى الدرع السحري!"; }, 15000);
             }
             else if (spell === "obliviate") {
                 statusText.innerText = "🌫️ Obliviate! (مسح وإعادة ضبط)"; body.classList.add('obliviate-active');
                 setTimeout(() => {
                     if (cameraTrack) { cameraTrack.stop(); cameraTrack = null; }
                     document.getElementById('hp-music').pause();
-                    stopFire(); particles.length = 0; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
+                    stopFire(); Sound.stopAll(); particles.length = 0; beams.length = 0; patronus.on = false; body.className = 'obliviate-active'; mainContent.className = 'levitate-target';
                     document.getElementById('glass-crack-container').style.display = 'none';
                     document.getElementById('snake-container').classList.remove('vipera-evanesca-anim');
                     document.getElementById('blood-container').innerHTML = ''; document.getElementById('slug-container').innerHTML = '';
@@ -1011,7 +1098,7 @@
                 setTimeout(() => body.classList.remove('obliviate-active'), 3000);
             }
             else if (spell === "expecto patronum") {
-                statusText.innerText = "🦌 جارِ استدعاء الباتروناس..."; patronusContainer.style.display = "block"; patronusWisps();
+                statusText.innerText = "🦌 جارِ استدعاء الباتروناس..."; patronusContainer.style.display = "block"; patronusWisps(); summonPatronus();
                 animate(patronusContainer, { opacity: [0, 1], y: [16, 0], scale: [0.96, 1] }, { duration: 0.6, type: M ? 'spring' : undefined, bounce: 0.3 });
                 document.getElementById('patronus-input').focus();
             }
@@ -1034,6 +1121,285 @@
         }
 
         function callPatronus() { const phoneNumber = document.getElementById('patronus-input').value.trim(); if (phoneNumber !== "") window.location.href = `tel:${phoneNumber}`; else alert("يرجى كتابة رقم الهاتف أولاً!"); }
+
+        /* ---------------- sound (synthesized with Web Audio) ---------------- */
+        const Sound = (() => {
+            let ctx = null, master = null, noiseBuf = null; const loops = {};
+            let muted = false; try { muted = localStorage.getItem('voice-muted') === '1'; } catch (e) {}
+            function ensure() {
+                if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+                const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+                ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 0.8;
+                const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+                noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+                const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+                return ctx;
+            }
+            function env(g, t, a, peak, dcy) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dcy); }
+            function noise({ dur = 0.5, type = 'bandpass', f0 = 1200, f1 = 300, q = 1, peak = 0.5, a = 0.01, delay = 0 }) {
+                const c = ensure(); if (!c) return; const t = c.currentTime + delay;
+                const src = c.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+                const f = c.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(f1, 20), t + a + dur);
+                const g = c.createGain(); env(g, t, a, peak, dur);
+                src.connect(f); f.connect(g); g.connect(master); src.start(t); src.stop(t + a + dur + 0.05);
+            }
+            function tone({ freq = 440, to = null, dur = 0.4, type = 'sine', peak = 0.3, a = 0.01, delay = 0 }) {
+                const c = ensure(); if (!c) return; const t = c.currentTime + delay;
+                const o = c.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t); if (to) o.frequency.exponentialRampToValueAtTime(to, t + a + dur);
+                const g = c.createGain(); env(g, t, a, peak, dur); o.connect(g); g.connect(master); o.start(t); o.stop(t + a + dur + 0.05);
+            }
+            function loopNoise(name, { type = 'bandpass', freq = 800, q = 0.8, gain = 0.2, crackle = false }) {
+                const c = ensure(); if (!c || loops[name]) return;
+                const src = c.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+                const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+                const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(gain, c.currentTime + 0.6);
+                src.connect(f); f.connect(g); g.connect(master); src.start();
+                const timer = crackle ? setInterval(() => noise({ dur: 0.03 + Math.random() * 0.05, type: 'highpass', f0: 2600, f1: 1800, peak: 0.06 + Math.random() * 0.16, a: 0.002 }), 75) : null;
+                loops[name] = { stop: (t) => src.stop(t), g, timer };
+            }
+            function hum(name) {
+                const c = ensure(); if (!c || loops[name]) return;
+                const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime); g.gain.exponentialRampToValueAtTime(0.05, c.currentTime + 0.5); g.connect(master);
+                const oscs = [196, 198.6, 392.4].map(fr => { const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = fr; o.connect(g); o.start(); return o; });
+                loops[name] = { stop: (t) => oscs.forEach(o => o.stop(t)), g, timer: null };
+            }
+            function stopLoop(name, fade = 0.8) {
+                const l = loops[name]; if (!l || !ctx) return; clearInterval(l.timer);
+                const t = ctx.currentTime; l.g.gain.cancelScheduledValues(t); l.g.gain.setValueAtTime(Math.max(l.g.gain.value, 0.0001), t); l.g.gain.exponentialRampToValueAtTime(0.0001, t + fade);
+                l.stop(t + fade + 0.05); delete loops[name];
+            }
+            const fx = {
+                cast() { noise({ dur: 0.35, f0: 3400, f1: 600, q: 1.3, peak: 0.3 }); },
+                impact() { noise({ dur: 0.25, type: 'lowpass', f0: 1000, f1: 120, peak: 0.4 }); tone({ freq: 170, to: 55, dur: 0.3, peak: 0.22 }); },
+                chime() { [880, 1320, 1760].forEach((f, i) => tone({ freq: f, dur: 0.9, peak: 0.1, delay: i * 0.07 })); },
+                lumos() { [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone({ freq: f, dur: 1.3, peak: 0.09, a: 0.02, delay: i * 0.06 })); },
+                nox() { tone({ freq: 660, to: 110, dur: 0.8, type: 'triangle', peak: 0.14 }); },
+                explosion() { noise({ dur: 1.4, type: 'lowpass', f0: 1800, f1: 60, peak: 0.9, a: 0.005 }); tone({ freq: 90, to: 30, dur: 1, peak: 0.45 }); },
+                water() { noise({ dur: 3.2, type: 'lowpass', f0: 500, f1: 1500, q: 0.5, peak: 0.32, a: 0.6 }); },
+                block() { tone({ freq: 1250, dur: 0.5, peak: 0.18 }); tone({ freq: 1875, dur: 0.6, peak: 0.1 }); noise({ dur: 0.2, f0: 4200, f1: 2000, peak: 0.2 }); },
+                patronus() { [440, 554.4, 659.3, 880].forEach((f, i) => tone({ freq: f, dur: 3, a: 0.8, peak: 0.06, delay: i * 0.15 })); },
+                avada() { tone({ freq: 120, to: 900, dur: 0.6, type: 'sawtooth', peak: 0.18 }); noise({ dur: 0.9, type: 'highpass', f0: 3000, f1: 6000, peak: 0.3 }); },
+                unlock() { noise({ dur: 0.05, type: 'highpass', f0: 3200, f1: 3000, peak: 0.4 }); noise({ dur: 0.05, type: 'highpass', f0: 2200, f1: 2000, peak: 0.35, delay: 0.14 }); },
+                lock() { noise({ dur: 0.06, f0: 1500, f1: 1400, peak: 0.5 }); tone({ freq: 300, to: 200, dur: 0.1, peak: 0.14 }); },
+                chirps() { for (let i = 0; i < 10; i++) { const f = 2000 + Math.random() * 1500; tone({ freq: f, to: f * 1.4, dur: 0.08, peak: 0.05, delay: i * 0.18 + Math.random() * 0.1 }); } },
+                slash() { noise({ dur: 0.18, type: 'highpass', f0: 6000, f1: 2500, peak: 0.4 }); },
+                freeze() { noise({ dur: 1.2, type: 'highpass', f0: 6000, f1: 3000, peak: 0.18 }); [1568, 2093].forEach((f, i) => tone({ freq: f, dur: 1, peak: 0.05, delay: i * 0.1 })); },
+                whoosh() { noise({ dur: 0.8, f0: 400, f1: 2400, q: 0.7, peak: 0.28, a: 0.2 }); },
+                dark() { tone({ freq: 65, dur: 2.5, type: 'sawtooth', peak: 0.1, a: 0.4 }); noise({ dur: 2.5, type: 'lowpass', f0: 300, f1: 200, peak: 0.28, a: 0.5 }); },
+                boing() { tone({ freq: 180, to: 520, dur: 0.25, type: 'square', peak: 0.07 }); tone({ freq: 520, to: 180, dur: 0.25, type: 'square', peak: 0.07, delay: 0.25 }); },
+                hiss() { noise({ dur: 1.2, type: 'highpass', f0: 5000, f1: 4000, peak: 0.22, a: 0.1 }); },
+                fizzle() { noise({ dur: 0.4, f0: 900, f1: 300, peak: 0.2 }); }
+            };
+            return {
+                ensure, fx, loopNoise, hum, stopLoop,
+                stopAll() { Object.keys(loops).forEach(n => stopLoop(n, 0.3)); },
+                get muted() { return muted; },
+                setMuted(m) { muted = m; try { localStorage.setItem('voice-muted', m ? '1' : '0'); } catch (e) {} if (master) master.gain.setTargetAtTime(m ? 0 : 0.8, ctx.currentTime, 0.05); }
+            };
+        })();
+
+        const spellSound = {
+            lumos: 'lumos', nox: 'nox', bombarda: 'explosion', aguamenti: 'water', 'expecto patronum': 'patronus', 'avada kedavra': 'avada',
+            alohomora: 'unlock', colloportus: 'lock', avis: 'chirps', diffindo: 'slash', sectumsempra: 'slash', 'petrificus totalus': 'freeze',
+            'wingardium leviosa': 'whoosh', morsmordre: 'dark', riddikulus: 'boing', serpensortia: 'hiss', 'vipera evanesca': 'hiss', obliviate: 'whoosh',
+            confundo: 'whoosh', engorgio: 'whoosh', reducio: 'whoosh', descendo: 'impact', expelliarmus: 'impact', duro: 'impact', incendio: 'impact', fiendfyre: 'impact'
+        };
+        const buzz = (p) => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} };
+        const spellBuzz = { bombarda: [60, 40, 120], 'avada kedavra': [300], expelliarmus: [40, 30, 40], sectumsempra: [20, 40, 20, 40, 20], diffindo: [30], 'petrificus totalus': [120], fiendfyre: [80, 40, 80] };
+
+        const soundBtn = document.getElementById('sound-btn');
+        soundBtn.setAttribute('aria-pressed', Sound.muted ? 'false' : 'true');
+        soundBtn.addEventListener('click', () => { Sound.ensure(); Sound.setMuted(!Sound.muted); soundBtn.setAttribute('aria-pressed', Sound.muted ? 'false' : 'true'); if (!Sound.muted) Sound.fx.chime(); });
+
+        document.addEventListener('pointerdown', () => {
+            Sound.ensure();
+            if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().catch(() => {});
+        }, { once: true });
+
+        /* ---------------- Great Hall scene ---------------- */
+        (function buildScene() {
+            const svgNS = 'http://www.w3.org/2000/svg'; const castle = document.getElementById('castle');
+            const el = (tag, attrs) => { const n = document.createElementNS(svgNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+            castle.appendChild(el('path', { class: 'far', d: 'M0 300 L0 212 Q 120 176 250 198 Q 380 150 520 184 Q 640 160 760 186 Q 880 168 1000 204 L1000 300 Z' }));
+            const near = el('g', { class: 'near' }); castle.appendChild(near);
+            near.appendChild(el('path', { d: 'M0 300 L0 262 Q 220 232 470 238 Q 700 244 1000 262 L1000 300 Z' }));
+            const base = 240;
+            const towers = [[548, 18, 150, 44], [574, 34, 176, 0], [616, 22, 128, 50], [646, 70, 168, 0], [724, 16, 100, 54], [748, 30, 142, 40], [786, 44, 184, 0], [838, 20, 150, 46], [866, 28, 196, 0], [902, 16, 168, 48]];
+            near.appendChild(el('rect', { x: 330, y: 196, width: 360, height: base - 196 }));
+            const wins = [];
+            for (const [x0, w, top, roof] of towers) { const x = x0 - 230;
+                near.appendChild(el('rect', { x, y: top, width: w, height: base - top }));
+                if (roof) near.appendChild(el('path', { d: `M${x - 3} ${top} L${x + w / 2} ${top - roof} L${x + w + 3} ${top} Z` }));
+                else for (let bx = x; bx < x + w - 3; bx += 7) near.appendChild(el('rect', { x: bx, y: top - 6, width: 4, height: 6 }));
+                for (let wy = top + 10; wy < base - 14; wy += 18) if (Math.random() < 0.55) wins.push(el('rect', { class: 'win', x: x + w / 2 - 1.6, y: wy, width: 3.2, height: 6.5, rx: 1.6 }));
+            }
+            near.appendChild(el('path', { d: 'M366 214 h300 v2 h-300z M410 202 l6 -8 l6 8z' }));
+            wins.forEach(w => castle.appendChild(w));
+
+            const clouds = document.getElementById('clouds');
+            for (let i = 0; i < 5; i++) {
+                const c = document.createElement('div'); c.className = 'cloud';
+                const w = 160 + Math.random() * 220; c.style.width = w + 'px'; c.style.height = (w * 0.22) + 'px';
+                c.style.top = (6 + Math.random() * 34) + '%'; const dur = 90 + Math.random() * 80;
+                c.style.animationDuration = dur + 's'; c.style.animationDelay = (-Math.random() * dur) + 's';
+                clouds.appendChild(c);
+            }
+
+            const candles = document.getElementById('candles'); let placed = 0, guard = 0;
+            while (placed < 11 && guard++ < 200) {
+                const x = 3 + Math.random() * 94, y = 13 + Math.random() * 30;
+                if ((y > 16 && x > 24 && x < 76) || (x < 30 && y < 30)) continue;
+                const s = 0.45 + Math.random() * 0.65; const c = document.createElement('div'); c.className = 'candle';
+                c.style.left = x + '%'; c.style.top = y + '%';
+                c.style.setProperty('--s', s.toFixed(2)); c.style.setProperty('--o', (0.45 + s * 0.5).toFixed(2));
+                c.style.setProperty('--b', ((1.1 - s) * 2.2).toFixed(1) + 'px');
+                c.style.setProperty('--dur', (3.5 + Math.random() * 3.5).toFixed(1) + 's'); c.style.setProperty('--delay', (-Math.random() * 5).toFixed(1) + 's');
+                candles.appendChild(c); placed++;
+            }
+        })();
+
+        const sceneEl = document.getElementById('scene'); const bloomEl = document.getElementById('lumos-bloom');
+        const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2, moved: false };
+        let tpx = 0, tpy = 0, cpx = 0, cpy = 0, lx = pointer.x, ly = pointer.y, lastTrail = 0;
+        window.addEventListener('pointermove', (e) => {
+            pointer.x = e.clientX; pointer.y = e.clientY; pointer.moved = true;
+            tpx = (e.clientX / W - 0.5) * 2; tpy = (e.clientY / H - 0.5) * 2;
+            const now = performance.now();
+            if (!reduceMotion && now - lastTrail > 24 && (e.pointerType === 'mouse' || e.pressure > 0)) {
+                lastTrail = now;
+                emit({ x: e.clientX, y: e.clientY, vx: (Math.random() - 0.5) * 0.8, vy: Math.random() * 0.6 + 0.2, life: 0, max: 30 + Math.random() * 20, size: Math.random() * 1.6 + 0.6, kind: 'spark', color: palettes.gold[(Math.random() * 3) | 0], g: 0.015, drag: 0.98 });
+            }
+        }, { passive: true });
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.gamma == null || e.beta == null) return;
+            tpx = Math.max(-1, Math.min(1, e.gamma / 25)); tpy = Math.max(-1, Math.min(1, (e.beta - 50) / 25));
+        });
+
+        const twinkle = [];
+        for (let i = 0; i < 120; i++) twinkle.push({ x: Math.random(), y: Math.random() * 0.72, r: Math.random() * 1.1 + 0.3, p: Math.random() * 6.28, s: 0.01 + Math.random() * 0.03 });
+        function drawStars(dt) {
+            for (let i = 0; i < twinkle.length; i++) {
+                const s = twinkle[i]; if (!reduceMotion) s.p += s.s * dt;
+                dustCtx.fillStyle = `rgba(235, 240, 255, ${0.35 + Math.sin(s.p) * 0.3})`;
+                dustCtx.fillRect(s.x * W, s.y * H, s.r * 1.6, s.r * 1.6);
+            }
+        }
+
+        /* ---------------- spell jets ---------------- */
+        const beams = [];
+        function beamTarget(spell) {
+            const o = originPoint();
+            switch (spell) {
+                case 'incendio': case 'fiendfyre': case 'aguamenti': case 'serpensortia': return { x: W / 2 + (Math.random() - 0.5) * W * 0.3, y: H * 0.93 };
+                case 'morsmordre': return { x: W / 2, y: H * 0.14 };
+                case 'avis': return { x: W * 0.96, y: H * 0.3 };
+                case 'bombarda': return { x: W / 2, y: H / 2 };
+                case 'descendo': return { x: o.x, y: H * 0.96 };
+                case 'slugulus eructo': return { x: W / 2 + (Math.random() - 0.5) * W * 0.4, y: H * 0.04 };
+                default: return { x: o.x + (Math.random() - 0.5) * W * 0.55, y: Math.max(50, o.y - H * 0.36 - Math.random() * H * 0.1) };
+            }
+        }
+        function castBeam(spell, onImpact, blocked) {
+            const o = originPoint(); let t = beamTarget(spell);
+            if (blocked) t = { x: o.x + (t.x - o.x) * 0.45, y: o.y + (t.y - o.y) * 0.45 };
+            const dx = t.x - o.x, dy = t.y - o.y, len = Math.hypot(dx, dy) || 1;
+            const bend = (Math.random() - 0.5) * len * 0.35;
+            beams.push({ x0: o.x, y0: o.y, cx: (o.x + t.x) / 2 - dy / len * bend, cy: (o.y + t.y) / 2 + dx / len * bend, x1: t.x, y1: t.y,
+                t: 0, dur: reduceMotion ? 1 : Math.min(26, 9 + len / 45), pal: palettes[blocked ? 'shield' : (spellPalette[spell] || 'gold')], hit: false, fade: 0, onImpact, spell });
+        }
+        function bez(b, u) { const m = 1 - u; return [m * m * b.x0 + 2 * m * u * b.cx + u * u * b.x1, m * m * b.y0 + 2 * m * u * b.cy + u * u * b.y1]; }
+        function drawBeams(dt) {
+            for (let i = beams.length - 1; i >= 0; i--) {
+                const b = beams[i];
+                if (!b.hit) {
+                    b.t = Math.min(1, b.t + dt / b.dur);
+                    const [hx, hy] = bez(b, b.t);
+                    for (let k = 0; k < 3; k++) emit({ x: hx, y: hy, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, life: 0, max: 18 + Math.random() * 14, size: Math.random() * 1.8 + 0.8, kind: 'spark', color: b.pal[(Math.random() * 3) | 0], g: 0.02, drag: 0.94 });
+                    if (b.t >= 1) {
+                        b.hit = true;
+                        for (let k = 0; k < (reduceMotion ? 12 : 46); k++) { const a = Math.random() * 6.283, sp = Math.random() * 6 + 1.5; emit({ x: b.x1, y: b.y1, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: 26 + Math.random() * 24, size: Math.random() * 2.4 + 1, kind: 'spark', color: b.pal[(Math.random() * 3) | 0], g: 0.07, drag: 0.94, trail: true }); }
+                        if (b.onImpact) b.onImpact();
+                    }
+                } else {
+                    b.fade += dt / 12; if (b.fade >= 1) { beams.splice(i, 1); continue; }
+                }
+                const head = b.t, tail = Math.max(0, head - 0.42 + (b.hit ? b.fade * 0.42 : 0));
+                fxCtx.globalCompositeOperation = 'lighter'; fxCtx.lineCap = 'round';
+                const alpha = 1 - b.fade;
+                for (const [w, col, a] of [[11, b.pal[2], 0.28], [5, b.pal[1], 0.7], [2, b.pal[0], 1]]) {
+                    fxCtx.beginPath();
+                    for (let s = 0; s <= 16; s++) { const [px, py] = bez(b, tail + (head - tail) * s / 16); if (s === 0) fxCtx.moveTo(px, py); else fxCtx.lineTo(px, py); }
+                    fxCtx.strokeStyle = col; fxCtx.globalAlpha = a * alpha; fxCtx.lineWidth = w; fxCtx.stroke();
+                }
+                fxCtx.globalAlpha = 1;
+            }
+        }
+
+        /* ---------------- Patronus made of light ---------------- */
+        let stagPts = null; const stagImg = new Image();
+        stagImg.onload = () => {
+            const S = 110; const c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+            x.drawImage(stagImg, 0, 0, S, S); const d = x.getImageData(0, 0, S, S).data; stagPts = [];
+            for (let y = 0; y < S; y += 2) for (let xx = 0; xx < S; xx += 2) if (d[(y * S + xx) * 4 + 3] > 140) stagPts.push([(xx + Math.random() * 2) / S - 0.5, (y + Math.random() * 2) / S - 0.5]);
+        };
+        stagImg.src = 'assets/noto/deer.png';
+        const patronus = { on: false, t: 0, parts: [], size: 300 };
+        function summonPatronus() {
+            if (!stagPts) return;
+            const o = originPoint(); patronus.on = true; patronus.t = 0; patronus.size = Math.min(W, H) * 0.5;
+            patronus.parts = stagPts.map(([px, py]) => ({ px, py, x: o.x + (Math.random() - 0.5) * 30, y: o.y + (Math.random() - 0.5) * 30, vx: 0, vy: 0, r: Math.random() * 1.5 + 0.7, ph: Math.random() * 6.28 }));
+        }
+        function drawPatronus(dt) {
+            if (!patronus.on) return;
+            const P = patronus; P.t += dt;
+            const gallopStart = 55, gallopLen = 210;
+            const cx = P.t < gallopStart ? W * 0.5 : W * 0.5 - (P.t - gallopStart) * (W * 1.05 / gallopLen);
+            const cy = H * 0.4 + (P.t > gallopStart ? Math.sin(P.t * 0.19) * 16 : 0);
+            const dispersing = P.t > gallopStart + gallopLen;
+            fxCtx.globalCompositeOperation = 'lighter';
+            for (let i = 0; i < P.parts.length; i++) {
+                const p = P.parts[i];
+                if (!dispersing) {
+                    const tx = cx + p.px * P.size, ty = cy + p.py * P.size;
+                    p.vx += (tx - p.x) * 0.06 * dt; p.vy += (ty - p.y) * 0.06 * dt; p.vx *= 0.8; p.vy *= 0.8;
+                } else { p.vx *= 0.98; p.vy = p.vy * 0.98 - 0.03; }
+                p.x += p.vx * dt + Math.sin(P.t * 0.1 + p.ph) * 0.4; p.y += p.vy * dt;
+                const a = dispersing ? Math.max(0, 1 - (P.t - gallopStart - gallopLen) / 50) : Math.min(1, P.t / 30);
+                fxCtx.globalAlpha = a * (0.55 + Math.sin(P.t * 0.2 + p.ph) * 0.25);
+                fxCtx.fillStyle = i % 5 === 0 ? '#ffffff' : '#bfe6ff';
+                fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.r, 0, 6.283); fxCtx.fill();
+            }
+            fxCtx.globalAlpha = 1;
+            if (!dispersing && !reduceMotion) for (let k = 0; k < 5; k++) {
+                const p = P.parts[(Math.random() * P.parts.length) | 0];
+                emit({ x: p.x, y: p.y, vx: (P.t > gallopStart ? 2.2 : 0) + (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6 - 0.2, life: 0, max: 40 + Math.random() * 30, size: Math.random() * 1.6 + 0.6, kind: 'spark', color: palettes.shield[(Math.random() * 3) | 0], g: -0.004, drag: 0.985, wob: Math.random() * 6 });
+            }
+            if (P.t > gallopStart + gallopLen + 55) P.on = false;
+        }
+
+        function drawExtras(dt) {
+            if (!reduceMotion) {
+                cpx += (tpx - cpx) * 0.05 * dt; cpy += (tpy - cpy) * 0.05 * dt;
+                sceneEl.style.setProperty('--px', cpx.toFixed(3)); sceneEl.style.setProperty('--py', cpy.toFixed(3));
+            }
+            if (body.classList.contains('lumos-active')) {
+                lx += (pointer.x - lx) * 0.12 * dt; ly += (pointer.y - ly) * 0.12 * dt;
+                bloomEl.style.setProperty('--lx', lx.toFixed(1) + 'px'); bloomEl.style.setProperty('--ly', ly.toFixed(1) + 'px');
+                if (!reduceMotion && Math.random() < 0.5) emit({ x: lx, y: ly, vx: (Math.random() - 0.5) * 1.2, vy: (Math.random() - 0.5) * 1.2, life: 0, max: 24, size: Math.random() * 1.4 + 0.6, kind: 'spark', color: palettes.light[(Math.random() * 3) | 0], g: 0, drag: 0.95 });
+            }
+            drawBeams(dt); drawPatronus(dt);
+            fxCtx.globalCompositeOperation = 'source-over';
+        }
+
+        function domeHit() {
+            const d = document.getElementById('protego-dome'); d.classList.remove('hit'); void d.offsetWidth; d.classList.add('hit');
+        }
+
+        function onSpellImpact(spell, blocked) {
+            if (blocked) { Sound.fx.block(); buzz([15, 25, 15]); return; }
+            const s = spellSound[spell]; Sound.fx[s || 'chime']();
+            buzz(spellBuzz[spell] || 20);
+        }
 
         /* ---------------- entrance ---------------- */
         if (!reduceMotion) {
