@@ -1573,13 +1573,31 @@
                 const sp = Math.hypot(b.vx, b.vy), mx = 5.5; if (sp > mx) { b.vx *= mx / sp; b.vy *= mx / sp; }
                 b.x += b.vx * dt; b.y += b.vy * dt; b.ph += 0.35 * dt;
                 if (b.x < -60 || b.life > 600) { flock.splice(i, 1); continue; }
-                const f = Math.sin(b.ph) * 0.9, s = b.s, ang = Math.atan2(b.vy, b.vx);
-                ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(ang + Math.PI);
-                ctx.strokeStyle = '#e9eefc'; ctx.lineWidth = 2.2;
-                ctx.beginPath(); ctx.moveTo(-s * 0.3, -s); ctx.quadraticCurveTo(-s * 0.1, -s * 0.4 * f - s * 0.2, 0, 0); ctx.quadraticCurveTo(-s * 0.1, s * 0.4 * f + s * 0.2, -s * 0.3, s); ctx.stroke();
-                ctx.fillStyle = '#e9eefc'; ctx.beginPath(); ctx.ellipse(s * 0.1, 0, s * 0.45, s * 0.16, 0, 0, 6.283); ctx.fill();
-                ctx.restore();
+                drawCanary(ctx, b);
             }
+        }
+
+        function wingPath(ctx, s) {
+            ctx.beginPath(); ctx.moveTo(s * 0.25, 0);
+            ctx.bezierCurveTo(s * 0.1, -s * 0.5, -s * 0.3, -s * 1.0, -s * 0.55, -s * 1.15);
+            ctx.lineTo(-s * 0.62, -s * 0.95); ctx.lineTo(-s * 0.72, -s * 0.98); ctx.lineTo(-s * 0.74, -s * 0.76); ctx.lineTo(-s * 0.86, -s * 0.74);
+            ctx.lineTo(-s * 0.82, -s * 0.52); ctx.lineTo(-s * 0.92, -s * 0.46); ctx.bezierCurveTo(-s * 0.7, -s * 0.2, -s * 0.4, -s * 0.05, -s * 0.2, 0);
+            ctx.closePath();
+        }
+        function drawCanary(ctx, b) {
+            const s = b.s * 1.5, flap = Math.sin(b.ph), dir = b.vx < 0 ? -1 : 1, tilt = Math.atan2(b.vy, Math.abs(b.vx)) * 0.6;
+            ctx.save(); ctx.translate(b.x, b.y); ctx.scale(dir, 1); ctx.rotate(tilt);
+            ctx.save(); ctx.translate(-s * 0.02, -s * 0.12); ctx.scale(1, flap * 0.95); ctx.fillStyle = '#c99a1a'; wingPath(ctx, s * 0.9); ctx.fill(); ctx.restore();
+            ctx.fillStyle = '#d9a514'; ctx.beginPath(); ctx.moveTo(-s * 0.55, -s * 0.05); ctx.lineTo(-s * 1.15, -s * 0.24); ctx.lineTo(-s * 1.05, 0); ctx.lineTo(-s * 1.15, s * 0.2); ctx.lineTo(-s * 0.55, s * 0.08); ctx.closePath(); ctx.fill();
+            const bg = ctx.createRadialGradient(s * 0.1, -s * 0.15, s * 0.05, 0, 0, s * 0.8); bg.addColorStop(0, '#fff3a6'); bg.addColorStop(0.55, '#ffd52e'); bg.addColorStop(1, '#d99a00');
+            ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.72, s * 0.36, -0.12, 0, 6.283); ctx.fill();
+            ctx.beginPath(); ctx.arc(s * 0.62, -s * 0.2, s * 0.3, 0, 6.283); ctx.fill();
+            ctx.fillStyle = '#ff9a1f'; ctx.beginPath(); ctx.moveTo(s * 0.88, -s * 0.26); ctx.lineTo(s * 1.1, -s * 0.17); ctx.lineTo(s * 0.88, -s * 0.1); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#1a1206'; ctx.beginPath(); ctx.arc(s * 0.7, -s * 0.25, s * 0.06, 0, 6.283); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(s * 0.71, -s * 0.28, s * 0.03, s * 0.03);
+            ctx.save(); ctx.translate(s * 0.05, -s * 0.1); ctx.scale(1, flap); const wg = ctx.createLinearGradient(0, 0, -s * 0.6, -s); wg.addColorStop(0, '#ffe25a'); wg.addColorStop(1, '#e8a800');
+            ctx.fillStyle = wg; wingPath(ctx, s); ctx.fill(); ctx.strokeStyle = 'rgba(150, 100, 0, 0.35)'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+            ctx.restore();
         }
 
         /* ---------------- Homenum Revelio: ink footprints ---------------- */
